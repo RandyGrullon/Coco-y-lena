@@ -27,7 +27,7 @@ SKELETON_HEAD = (
     "img{max-width:100%}[hidden]{display:none!important}</style></head><body>"
 )
 SITE_HEAD = f"""<!doctype html><html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>{APP}</title>
 <meta name="description" content="Coco enseña español a los niños en la Isla Ñ; Lena enseña alemán A1.4 → A2 en la Werkstatt Ü. Voces reales, juegos y repetición espaciada.">
 <meta name="robots" content="noindex,nofollow">
@@ -73,12 +73,15 @@ def build() -> str:
 
     def inline(m: re.Match) -> str:
         name = m.group(1)
+        if name != "audio-manifest.js" and not (ROOT / name).exists():
+            print("AVISO: falta", name)
+            return ""
         src = man if name == "audio-manifest.js" else (ROOT / name).read_text(encoding="utf-8")
         if "</script" in src.lower():
             raise SystemExit(f"{name} contiene </script>")
         return "<script>\n" + src + "\n</script>"
 
-    out = re.sub(r'<script src="([\w.-]+\.js)"></script>', inline, html)
+    out = re.sub(r'<script src="([\w./-]+\.js)"></script>', inline, html)
     if "<script src=" in out:
         raise SystemExit("quedó un <script src> sin incrustar")
     return out

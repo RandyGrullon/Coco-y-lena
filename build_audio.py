@@ -83,8 +83,12 @@ def dialog_tags(who: dict) -> dict:
     return out
 
 
+CONTENT = ["es-a1", "es-a2", "es-b1", "es-b2", "de-a2", "de-b1", "de-b2"]
+
+
 def load_data():
-    js = "global.window={};require('./es-data.js');require('./de-data.js');process.stdout.write(JSON.stringify({ES:window.ES,DE:window.DE}))"
+    req = "".join(f"require('./content/{n}.js');" for n in CONTENT if (ROOT / "content" / (n + ".js")).exists())
+    js = "global.window={};require('./es-data.js');require('./de-data.js');" + req + "process.stdout.write(JSON.stringify({ES:window.ES,DE:window.DE}))"
     raw = subprocess.run(["node", "-e", js], cwd=ROOT, capture_output=True, check=True).stdout
     d = json.loads(raw.decode("utf-8"))
     return d["ES"], d["DE"]
@@ -138,6 +142,14 @@ def collect(ES, DE):
             add("k-coco", "coco", t)
     for it in ES["shop"]:
         add("k-coco", "k-lat", it["es"])
+    for lv, ex in (ES.get("exams") or {}).items():
+        g = "k-x-" + lv
+        for q in ex.get("escuchar", []):
+            for tg in (("k-lat", "k-es") if q["who"] == "narr" else (q["who"],)):
+                add(g, tg, q["text"])
+        for q in ex.get("hablar", []):
+            for nt in ("k-lat", "k-es"):
+                add(g, nt, q["model"])
 
     # ---- Werkstatt Ü ----
     for i, v in enumerate(DE["vocab"]):
@@ -192,6 +204,25 @@ def collect(ES, DE):
     add("d-exam", "de-m", ex["selbst"])
     for l in "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß":
         add("d-exam", "de-f", l)
+    for t in DE.get("texts", []):
+        for de, _ in t["paras"]:
+            add("d-t-" + t["id"], "de-f", de)
+    for lv, x in (DE.get("exams") or {}).items():
+        g = "d-x-" + lv
+        for it in x.get("hoeren", []):
+            parts = [y.strip() for y in re.split(r"(Frau:|Mann:)", it["text"]) if y.strip()]
+            if len(parts) == 1:
+                add(g, "de-f", parts[0])
+            tg = "de-f"
+            for y in parts:
+                if y == "Frau:":
+                    tg = "de-f"
+                elif y == "Mann:":
+                    tg = "de-m"
+                elif len(parts) > 1:
+                    add(g, tg, y)
+        for t in x.get("sprechen", []):
+            add(g, "de-m", t["model"])
     co = DE["coach"]
     for k in ("hello", "done", "level"):
         for de, _ in co[k]:
@@ -271,12 +302,37 @@ def frames(data: bytes):
     return bytes(out), dur
 
 
+KBPS = "32k"
+C32 = CACHE / "32k"
+
+
 def silence() -> bytes:
-    p = CACHE / "_silence.mp3"
+    p = C32 / "_silence.mp3"
     if not p.exists():
+        C32.mkdir(parents=True, exist_ok=True)
         subprocess.run([str(FFMPEG), "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.25",
-                        "-c:a", "libmp3lame", "-b:a", "48k", "-write_xing", "0", "-id3v2_version", "0", str(p)], check=True)
+                        "-c:a", "libmp3lame", "-b:a", KBPS, "-write_xing", "0", "-id3v2_version", "0", str(p)], check=True)
     return frames(p.read_bytes())
+
+
+def small(c) -> pathlib.Path:
+    return C32 / cache_path(c).name
+
+
+def encode_all(clips):
+    from concurrent.futures import ThreadPoolExecutor
+    C32.mkdir(parents=True, exist_ok=True)
+    todo = [c for c in clips if cache_path(c).exists() and not small(c).exists()]
+    print(f"recodificando {len(todo)} clips a {KBPS}", flush=True)
+
+    def one(c):
+        tmp = small(c).with_suffix(".tmp.mp3")
+        subprocess.run([str(FFMPEG), "-y", "-loglevel", "error", "-i", str(cache_path(c)), "-ac", "1", "-ar", "24000", "-c:a", "libmp3lame",
+                        "-b:a", KBPS, "-write_xing", "0", "-id3v2_version", "0", str(tmp)], check=True)
+        tmp.replace(small(c))
+
+    with ThreadPoolExecutor(8) as ex:
+        list(ex.map(one, todo))
 
 
 def build_sprites(groups):
@@ -284,11 +340,11 @@ def build_sprites(groups):
     for old in OUT.glob("*.mp3"):
         old.unlink()
     gap, gap_d = silence()
-    files, clips_idx, total = [], {}, 0
+    files, clips_idx, total, gidx = [], {}, 0, {}
     for g, clips in groups.items():
         buf, t = bytearray(gap), gap_d
         for c in clips:
-            p = cache_path(c)
+            p = small(c)
             if not p.exists():
                 continue
             fr, d = frames(p.read_bytes())
@@ -297,10 +353,12 @@ def build_sprites(groups):
             clips_idx[c["key"]] = [len(files), round(t, 3), round(d, 3)]
             buf += fr + gap
             t += d + gap_d
-        (OUT / (g + ".mp3")).write_bytes(buf)
-        files.append("audio/" + g + ".mp3")
+        name = g + "." + hashlib.sha1(buf).hexdigest()[:8] + ".mp3"
+        (OUT / name).write_bytes(buf)
+        gidx[g] = len(files)
+        files.append("audio/" + name)
         total += len(buf)
-    (OUT / "manifest.json").write_text(json.dumps({"f": files, "c": clips_idx}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    (OUT / "manifest.json").write_text(json.dumps({"f": files, "g": gidx, "c": clips_idx}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(files)} paquetes, {len(clips_idx)} clips, {total // 1024} KB en total")
 
 
@@ -315,6 +373,7 @@ def main():
         return
     CACHE.mkdir(exist_ok=True)
     asyncio.run(synth_all(allc))
+    encode_all(allc)
     build_sprites(groups)
 
 

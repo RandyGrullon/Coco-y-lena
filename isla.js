@@ -165,6 +165,24 @@ $("#css-isla").textContent = `
 .chest-anim{font-size:96px;line-height:1;animation:chest 1s ease-in-out}
 @keyframes chest{0%,100%{transform:none}20%{transform:rotate(-10deg) scale(1.05)}40%{transform:rotate(10deg) scale(1.1)}60%{transform:rotate(-6deg) scale(1.15)}}
 
+
+/* archipiélagos por nivel */
+.seas{display:grid;gap:18px;min-width:0}
+.sea-h{display:flex;gap:12px;align-items:center;justify-content:center;color:#fff;text-align:left}
+.sea-h h2{font-size:24px;text-align:left}
+.sea-h .sub{text-align:left;margin:0}
+.sea-pic{font-size:44px}
+.sea.lv-A2{background:radial-gradient(120px 40px at 15% 12%,rgba(255,255,255,.22),transparent 70%),linear-gradient(180deg,#FF9A8B,#F0607E 60%,#C9406A)}
+.sea.lv-B1{background:radial-gradient(120px 40px at 80% 10%,rgba(255,255,255,.18),transparent 70%),linear-gradient(180deg,#9B7BF0,#6A4FD1 60%,#46339C)}
+.sea.lv-B2{background:radial-gradient(2px 2px at 20% 20%,#fff,transparent),radial-gradient(2px 2px at 70% 35%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#fff,transparent),linear-gradient(180deg,#2B3F8F,#1A2766 60%,#0E1640)}
+.sea.locked .path{filter:grayscale(.8) opacity(.55)}
+.lockmsg{color:#fff;text-align:center;font-weight:800;margin:6px 0 0}
+.lockmsg a{color:#FFE08A}
+.node.boss .disc{background:conic-gradient(#FFD166 calc(var(--p) * 1%),rgba(255,255,255,.35) 0)}
+.node.boss .disc .in{background:radial-gradient(circle at 50% 60%,#FFF1C2 0 60%,#F5C46B 61%)}
+.opt small.ow{display:block;font:700 14px/1.2 var(--f-body);margin-top:6px;color:var(--ink-2)}
+.opts.six{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.six .opt.pic{font-size:clamp(40px,7vw,64px);min-height:clamp(84px,13vw,120px)}
 @media (max-width:1080px){
   .map-grid{grid-template-columns:minmax(0,1fr) minmax(260px,300px)}
   .map-grid .side.left{grid-column:1/-1;position:static;grid-template-columns:auto 1fr;align-items:stretch}
@@ -237,14 +255,16 @@ window.Isla = (() => {
     const c = $(".coach-k .coco, .coco-card .coco"); if (c) { c.classList.remove("jump"); void c.offsetWidth; c.classList.add("jump"); }
     if (voice) speak("coco", t);
   }
-  function right(el) {
+  let curLv = "A1"; /* nivel del contenido que se está jugando: alimenta el modelo adaptativo */
+  function right(el, lv) {
+    Adapt.record("es", lv || curLv, true);
     combo++; SFX.play("ok"); addCoins(1, el);
     if (combo > 0 && combo % 3 === 0) { setTimeout(() => { SFX.play("combo"); addCoins(2, el); }, 250); cocoSay("combo"); }
     else if (Math.random() < .35) cocoSay("good");
     else { const b = $("#coco-line"); if (b) b.textContent = one(ES.lines.good); }
     hudPaint();
   }
-  function wrong() { combo = 0; SFX.play("bad"); vibrate(40); cocoSay("try", false); hudPaint(); }
+  function wrong(lv) { Adapt.record("es", lv || curLv, false); combo = 0; SFX.play("bad"); vibrate(40); cocoSay("try", false); hudPaint(); }
   function mission() { const t = T(); if (!t.mission || t.mission.d !== today()) t.mission = { d: today(), rev: false, unit: false, reto: false, chest: false }; return t.mission; }
   function missionDone(k) { const m = mission(); if (!m[k]) { m[k] = true; save(); } }
   function narr(key) {
@@ -277,47 +297,69 @@ window.Isla = (() => {
   const starsFor = (s, n) => (s >= n - 1 ? 3 : s >= n / 2 ? 2 : 1);
 
   /* ---------- mapa ---------- */
-  const XS = [0, 24, 32, 18, -6, -28, -32, -14, 10];
+  const XS = [0, 24, 32, 18, -6, -28, -32, -14, 10, 22, 30, 12, -10];
+  const LVS = () => ES.levels.filter(L => ES.units.some(u => (u.level || "A1") === L.id));
+  const unlocked = () => Math.max(1, T().unlocked || 1);
+  const isOpen = lv => ES.levels.findIndex(L => L.id === lv) < unlocked();
+  /* La siguiente isla empieza en el nivel donde lo situó la prueba (no le hace repetir lo que ya sabe). */
+  const nextUnit = () => {
+    const from = Math.max(0, ES.levels.findIndex(L => L.id === (T().placedLv || "A1")));
+    const lvIdx = u => ES.levels.findIndex(L => L.id === (u.level || "A1"));
+    return ES.units.find(u => isOpen(u.level || "A1") && lvIdx(u) >= from && !UP(u.id).done)
+      || ES.units.find(u => isOpen(u.level || "A1") && !UP(u.id).done)
+      || ES.units.filter(u => isOpen(u.level || "A1")).pop() || ES.units[0];
+  };
   function home() {
+    if (Adapt.needs("es")) return Adapt.placement("es", "#isla");
     const t = T(), s = stage(), c = ES.coco[s], nx = ES.coco[s + 1];
     const dueN = allWords().filter(w => isDue(t.srs[w.key])).length;
-    const next = ES.units.find(u => !UP(u.id).done) || ES.units[0];
+    const next = nextUnit();
     const m = mission(), name = S.settings.kidName, allM = m.rev && m.unit && m.reto;
+    const est = Adapt.estimate("es"), lvls = LVS(), openN = unlocked();
+    const lastOpen = lvls[Math.min(openN, lvls.length) - 1];
+    const ready = lastOpen && ES.exams[lastOpen.id] && !((t.exams || {})[lastOpen.id] || {}).pass && Adapt.LV.indexOf(est.lv) >= Adapt.LV.indexOf(lastOpen.id) && openN < lvls.length;
     AUD.prefetch("k-coco"); AUD.prefetch("k-narr"); AUD.prefetch("k-" + next.id);
     const tile = (href, pic, k, cl, extra = "") => `<a class="gt ${cl}" href="${href}"><span class="pic">${pic}</span><b>${esc(ui(k).es)}${extra}</b><span class="kh">${esc(hp(ui(k)))}</span></a>`;
+    const seas = lvls.map((L, li) => {
+      const us = ES.units.filter(u => (u.level || "A1") === L.id), open = li < openN, done = us.filter(u => UP(u.id).done).length;
+      const ex = ES.exams[L.id], er = (t.exams || {})[L.id] || {};
+      return `<section class="sea lv-${L.id} ${open ? "" : "locked"}" id="sea-${L.id}">
+        <div class="sea-h"><span class="sea-pic">${L.pic}</span><div><h2>${esc(L.es)} · ${L.id}</h2><p class="sub">${esc(hp(L))} · ${done}/${us.length} ${er.pass ? "· " + L.trophy : ""}</p></div></div>
+        ${open ? "" : `<p class="lockmsg">🔒 ${H() === "de" ? "Gewinne die Große Herausforderung " + lvls[li - 1].id : "Win the Big Challenge " + lvls[li - 1].id} · <a href="#isla-examen-${lvls[li - 1].id}">${esc(ES.exams[lvls[li - 1].id] ? ES.exams[lvls[li - 1].id].title : "")}</a></p>`}
+        <div class="path"><svg class="route" aria-hidden="true"></svg>
+          ${us.map((u, i) => {
+            const p = UP(u.id), n = p.steps.filter(Boolean).length, cur = open && u === next && !p.done, tag = open ? "a" : "span";
+            return `<${tag} class="node ${cur ? "cur" : ""} ${p.done ? "done" : ""}" ${open ? `href="#isla-u-${u.id}"` : ""} style="--x:${XS[i % XS.length]}">
+              <span class="disc" style="--p:${n * 20}"><span class="in">${u.pic}</span>${p.done ? `<span class="stk">${u.sticker}</span>` : ""}</span>
+              ${cur ? `<span class="here">${cocoHTML(60, "float-anim")}<span class="tip">¡Aquí!</span></span>` : ""}
+              <span class="nlabel">${esc(u.title)}<small>${esc(hp(u))}</small></span></${tag}>`;
+          }).join("")}
+          ${ex ? `<a class="node boss ${er.pass ? "done" : ""}" href="#isla-examen-${L.id}" style="--x:0"><span class="disc" style="--p:${er.pass ? 100 : er.best || 0}"><span class="in">${er.pass ? L.trophy : "🏁"}</span></span><span class="nlabel">${esc(ex.title)}<small>${er.best != null ? er.best + " %" : (H() === "de" ? "Prüfung" : "Exam")}</small></span></a>` : ""}
+        </div></section>`;
+    }).join("");
     view(`<div class="wrap isla">
-      <div class="row" style="margin-bottom:14px;justify-content:space-between">${hud()}<span class="rank">${c.pic} ${esc(c.es)}</span></div>
+      <div class="row" style="margin-bottom:14px;justify-content:space-between">${hud()}<span class="rank">${c.pic} ${esc(c.es)} · ${est.lv}</span></div>
       <div class="map-grid">
         <aside class="side left">
           <div class="coco-card">
             <span data-act="poke" role="button" aria-label="Coco">${cocoHTML(150, "float-anim")}</span>
             <div class="stack" style="gap:8px;width:100%">
-              <div class="bubble-c" id="coco-line">${name ? "¡Hola, " + esc(name) + "!" : esc(ES.lines.hello[0])}<span class="kh">${H() === "de" ? "Tippe auf mich!" : "Tap me!"}</span></div>
+              <div class="bubble-c" id="coco-line">${ready ? "¡Creo que ya puedes con el " + esc(ES.exams[lastOpen.id].title) + "!" : name ? "¡Hola, " + esc(name) + "!" : esc(ES.lines.hello[0])}<span class="kh">${ready ? (H() === "de" ? "Du bist bereit für die nächste Prüfung!" : "You're ready for the next exam!") : H() === "de" ? "Tippe auf mich!" : "Tap me!"}</span></div>
+              ${ready ? `<a class="kbtn go sm" href="#isla-examen-${lastOpen.id}">🏁 ${esc(ES.exams[lastOpen.id].title)}</a>` : ""}
               ${nx ? `<div class="bar" title="Estrellas para el siguiente rango"><i style="width:${Math.round((t.stars - c.min) / (nx.min - c.min) * 100)}%;background:var(--sun)"></i></div><span class="kh">${nx.min - t.stars} ⭐ → ${nx.pic} ${esc(nx.es)}</span>` : ""}
             </div>
           </div>
           <div class="mission"><h2>${esc(ui("mission").es)} <span class="kh" style="display:inline">· ${esc(hp(ui("mission")))}</span></h2>
-            <a class="m-item ${m.rev ? "ok" : ""}" href="${dueN ? "#isla-repaso" : "#isla-rapido"}"><span class="ck">${m.rev ? "✓" : "1"}</span><span>${dueN ? `Cofre de repaso <span class="badge">${dueN}</span>` : "Contrarreloj"}<span class="kh">${esc(hp(ui(dueN ? "review" : "fast")))}</span></span></a>
+            <a class="m-item ${m.rev ? "ok" : ""}" href="${dueN ? "#isla-repaso" : "#isla-desafio"}"><span class="ck">${m.rev ? "✓" : "1"}</span><span>${dueN ? `Cofre de repaso <span class="badge">${dueN}</span>` : "Desafío de Coco"}<span class="kh">${esc(hp(dueN ? ui("review") : ui("smart")))}</span></span></a>
             <a class="m-item ${m.unit ? "ok" : ""}" href="#isla-u-${next.id}"><span class="ck">${m.unit ? "✓" : "2"}</span><span>${next.pic} ${esc(next.title)}<span class="kh">${esc(hp(next))}</span></span></a>
             <a class="m-item ${m.reto ? "ok" : ""}" href="#isla-retos"><span class="ck">${m.reto ? "✓" : "3"}</span><span>Un reto con un adulto<span class="kh">${esc(hp(ui("retos")))}</span></span></a>
             <button class="chest-btn ${allM && !m.chest ? "ready" : ""}" data-act="chest" ${allM && !m.chest ? "" : "disabled"}><span class="c">${m.chest ? "🎁" : "🧰"}</span>${m.chest ? "¡Cofre abierto!" : allM ? "¡Abre tu cofre!" : "Cofre del día"}</button>
           </div>
         </aside>
-        <section class="sea">
-          <h2>Las islas</h2><p class="sub">${H() === "de" ? "Tippe auf eine Insel" : "Tap an island"}</p>
-          <div class="path" id="path">
-            <svg class="route" id="route" aria-hidden="true"></svg>
-            ${ES.units.map((u, i) => {
-              const p = UP(u.id), n = p.steps.filter(Boolean).length;
-              return `<a class="node ${u === next && !p.done ? "cur" : ""} ${p.done ? "done" : ""}" href="#isla-u-${u.id}" style="--x:${XS[i % XS.length]}">
-                <span class="disc" style="--p:${n * 20}"><span class="in">${u.pic}</span>${p.done ? `<span class="stk">${u.sticker}</span>` : ""}</span>
-                ${u === next && !p.done ? `<span class="here">${cocoHTML(60, "float-anim")}<span class="tip">¡Aquí!</span></span>` : ""}
-                <span class="nlabel">${esc(u.title)}<small>${esc(hp(u))}</small></span></a>`;
-            }).join("")}
-          </div>
-        </section>
+        <div class="seas">${seas}</div>
         <aside class="side right">
           <div class="games">
+            ${tile("#isla-desafio", "🧠", "smart", "c5")}
             ${tile("#isla-repaso", "🧰", "review", "c1", dueN ? `<span class="badge">${dueN}</span>` : "")}
             ${tile("#isla-rapido", "⏱️", "fast", "c2")}
             ${tile("#isla-simon", "🦘", "simon", "c3")}
@@ -325,8 +367,8 @@ window.Isla = (() => {
             ${tile("#isla-dicc", "📖", "dict", "c5")}
             ${tile("#isla-tienda", "🛍️", "shop", "c1")}
             ${tile("#isla-retos", "🤝", "retos", "c3")}
-            ${tile("#isla-album", "🗂️", "album", "c4", ` <span class="kh" style="display:inline">${t.stickers.length}/${ES.units.length + EXTRA.length}</span>`)}
-            <a class="gt c5" href="#isla-coco" data-ai><span class="pic">💬</span><b>${esc(ui("chat").es)}</b><span class="kh">${esc(hp(ui("chat")))}</span></a>
+            ${tile("#isla-album", "🗂️", "album", "c4", ` <span class="kh" style="display:inline">${t.stickers.length}/${ES.units.length + EXTRA.length + lvls.length}</span>`)}
+            <a class="gt c2" href="#isla-coco" data-ai><span class="pic">💬</span><b>${esc(ui("chat").es)}</b><span class="kh">${esc(hp(ui("chat")))}</span></a>
           </div>
         </aside>
       </div></div>`, {
@@ -338,23 +380,119 @@ window.Isla = (() => {
       }
     });
     drawRoute(); narrOnce("map");
+    const curNode = $(".node.cur"); if (curNode && !home.scrolled) { home.scrolled = 1; setTimeout(() => curNode.scrollIntoView({ block: "center", behavior: "smooth" }), 350); }
   }
   let narrated = {};
   function narrOnce(k) { if (narrated[k]) return; narrated[k] = 1; setTimeout(() => narr(k), 250); }
   function drawRoute() {
-    const p = $("#path"), svg = $("#route"); if (!p || !svg) return;
-    const box = p.getBoundingClientRect();
-    const pts = $$(".disc", p).map(d => { const r = d.getBoundingClientRect(); return [r.left + r.width / 2 - box.left, r.top + r.height / 2 - box.top]; });
-    let dpath = ""; pts.forEach(([x, y], i) => { if (!i) dpath = `M${x},${y}`; else { const [px, py] = pts[i - 1], my = (py + y) / 2; dpath += ` C${px},${my} ${x},${my} ${x},${y}`; } });
-    svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
-    svg.innerHTML = `<path d="${dpath}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>`;
+    $$(".path").forEach(p => {
+      const svg = $("svg.route", p); if (!svg) return;
+      const box = p.getBoundingClientRect();
+      const pts = $$(".disc", p).map(d => { const r = d.getBoundingClientRect(); return [r.left + r.width / 2 - box.left, r.top + r.height / 2 - box.top]; });
+      let dpath = ""; pts.forEach(([x, y], i) => { if (!i) dpath = `M${x},${y}`; else { const [px, py] = pts[i - 1], my = (py + y) / 2; dpath += ` C${px},${my} ${x},${my} ${x},${y}`; } });
+      svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
+      svg.innerHTML = `<path d="${dpath}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>`;
+    });
   }
   let rT = 0; addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(drawRoute, 120); });
+
+  /* ---------- Gran Desafío (examen del nivel) ---------- */
+  function exam(lv) {
+    const ex = ES.exams[lv], L = ES.levels.find(x => x.id === lv);
+    if (!ex) return home();
+    curLv = lv; AUD.prefetch("k-x-" + lv);
+    const t = T(); t.exams = t.exams || {};
+    const parts = [["escuchar", "👂", "Escuchar", "Hören", "Listening"], ["leer", "📖", "Leer", "Lesen", "Reading"], ["escribir", "✍️", "Escribir", "Schreiben", "Writing"], ["hablar", "🗣️", "Hablar", "Sprechen", "Speaking"]];
+    const sc = { escuchar: 0, leer: 0, escribir: 0, hablar: 0 }, max = { escuchar: ex.escuchar.length, leer: ex.leer.length, escribir: ex.escribir.length * 2, hablar: ex.hablar.length * 2 };
+    let pi = -1;
+    const intro = () => stageView(`<div class="stack" style="justify-items:center;text-align:center">
+        <div style="font-size:72px">${L.pic}</div><h2 class="kf" style="font-size:30px">${esc(ex.title)}</h2><span class="kh">${esc(hp(ex))}</span>
+        <div class="games" style="width:100%;max-width:520px">${parts.map(p => `<div class="gt c4"><span class="pic">${p[1]}</span><b>${p[2]}</b><span class="kh">${H() === "de" ? p[3] : p[4]}</span></div>`).join("")}</div>
+        <p class="kh">${H() === "de" ? "Mit 60 % gewinnst du die Trophäe und öffnest die nächsten Inseln." : "Get 60% to win the trophy and open the next islands."}</p>
+        <button class="kbtn go" data-act="ex-go">¡Empezar!</button></div>`, { "ex-go": () => nextPart() });
+    function nextPart() {
+      pi++;
+      if (pi >= parts.length) return finish();
+      const [k] = parts[pi], box = $("#gbox");
+      const prog = parts.map((_, i) => `<i class="${i < pi ? "on" : i === pi ? "cur" : ""}"></i>`).join("");
+      $(".gprog").innerHTML = prog;
+      if (k === "escuchar" || k === "leer") mcPart(k, box);
+      else openPart(k, box);
+    }
+    function mcPart(k, box) {
+      const items = ex[k]; let i = 0;
+      const one1 = () => {
+        if (i >= items.length) return nextPart();
+        const q = items[i]; let locked = false;
+        box.innerHTML = `<div class="ghead"><span class="t">${k === "escuchar" ? "👂 Escuchar" : "📖 Leer"}<small>${i + 1}/${items.length}</small></span></div>
+          ${k === "escuchar" ? `<button class="big-play" data-act="ex-play" aria-label="Escuchar">🔊</button>` : `<div class="note-k" style="background:var(--surface-2);font:600 18px/1.55 var(--f-body)">${esc(q.text)}</div>`}
+          <div class="qt" style="font:800 21px/1.3 var(--f-kid)">${esc(q.q)}<span class="kh">${esc(hp(q))}</span></div>
+          <div class="qopts" style="display:grid;gap:10px">${q.opts.map((o, j) => `<button class="qopt" data-act="ex-a" data-j="${j}" style="text-align:left">${esc(o)}</button>`).join("")}</div>`;
+        const tag = q.who === "narr" ? NT() : q.who;
+        Object.assign(ACT, {
+          "ex-play": el => speak(tag, q.text, { btn: el }),
+          "ex-a": el => {
+            if (locked) return; locked = true;
+            const ok = +el.dataset.j === q.a; el.classList.add(ok ? "ok-x" : "bad-x");
+            if (ok) { sc[k]++; right(el, lv); } else wrong(lv);
+            setTimeout(() => { i++; one1(); }, 700);
+          }
+        });
+        if (k === "escuchar") setTimeout(() => speak(tag, q.text, { btn: $(".big-play", box) }), 300);
+      };
+      one1();
+    }
+    function openPart(k, box) {
+      const items = ex[k]; let i = 0, stopFn = null;
+      const one1 = () => {
+        if (i >= items.length) return nextPart();
+        const q = items[i];
+        box.innerHTML = `<div class="ghead"><span class="t">${k === "escribir" ? "✍️ Escribir" : "🗣️ Hablar"}<small>${i + 1}/${items.length}</small></span></div>
+          <div class="note-k">${esc(q.task)}<span class="kh" style="margin-top:4px">${esc(hp(q))}</span></div>
+          ${k === "escribir" ? `<textarea id="ex-t" rows="5" placeholder="Escribe aquí en español…" style="font:600 18px/1.5 var(--f-body)"></textarea>`
+            : `<div class="center"><button class="mic" data-mic data-act="ex-mic">${ICON.mic}<span>Hablar</span></button></div><p class="kh" data-nomic style="text-align:center">${H() === "de" ? "Sag es laut zu einem Erwachsenen." : "Say it out loud to an adult."}</p><p class="sp-out" id="ex-o"></p>`}
+          <div class="center"><button class="kbtn sea sm" data-act="ex-model">👀 Ver un ejemplo</button></div>
+          <div id="ex-m"></div>
+          <p class="kh" style="text-align:center">${H() === "de" ? "Wie ist es gelaufen? (am besten entscheidet ein Erwachsener)" : "How did it go? (ideally an adult decides)"}</p>
+          <div class="center"><button class="kbtn leaf sm" data-act="ex-s" data-v="2">😃 Muy bien</button><button class="kbtn sm" data-act="ex-s" data-v="1">🙂 Más o menos</button><button class="kbtn sm" data-act="ex-s" data-v="0">🤔 Todavía no</button></div>`;
+        paintCaps(box);
+        Object.assign(ACT, {
+          "ex-model": () => { $("#ex-m").innerHTML = `<div class="note-k" style="background:var(--leaf-2)">${sayBtn(q.model, NT())} ${esc(q.model)}</div>`; paintCaps(box); },
+          "ex-mic": el => { if (stopFn) { stopFn(); return; } el.classList.add("on"); stopFn = listen("es", txt => { $("#ex-o").textContent = "🎧 " + txt; }, () => { el.classList.remove("on"); stopFn = null; }); if (!stopFn) el.classList.remove("on"); },
+          "ex-s": el => { const v = +el.dataset.v; sc[k] += v; Adapt.record("es", lv, v === 2, .05); if (v) SFX.play("ok"); i++; one1(); }
+        });
+      };
+      one1();
+    }
+    function finish() {
+      const tot = Object.values(sc).reduce((a, b) => a + b, 0), mx = Object.values(max).reduce((a, b) => a + b, 0), pct = Math.round(tot / mx * 100), pass = pct >= 60;
+      const r = t.exams[lv] = t.exams[lv] || {}; r.best = Math.max(r.best || 0, pct);
+      const li = ES.levels.findIndex(x => x.id === lv);
+      if (pass && !r.pass) { r.pass = true; t.unlocked = Math.max(unlocked(), li + 2); sticker("examen-" + lv); }
+      save(); addStars(pass ? 10 : 3);
+      overlay(`<div style="font-size:84px">${pass ? L.trophy : "💪"}</div><h2>${pass ? "¡Ganaste el " + esc(ex.title) + "!" : pct + " %"}</h2>
+        <span class="kh">${pass ? (ES.levels[li + 1] ? (H() === "de" ? "Neue Inseln sind offen: " : "New islands are open: ") + esc(ES.levels[li + 1].es) : "") : (H() === "de" ? "Noch nicht ganz. Spiel noch ein paar Inseln und versuch es wieder!" : "Not quite yet. Play a few more islands and try again!")}</span>
+        <div class="ad-skills" style="width:100%">${parts.map(([k, , n]) => `<div class="row" style="flex-wrap:nowrap"><span style="width:90px;font-weight:800">${n}</span><div class="bar" style="flex:1"><i style="width:${Math.round(sc[k] / max[k] * 100)}%"></i></div></div>`).join("")}</div>
+        ${pass ? `<div class="rw-coins">+50 🪙</div>` : ""}
+        <a class="kbtn go" href="#isla">🗺️ Mapa</a>`);
+      if (pass) { T().coins += 50; save(); confetti(); SFX.play("chest"); setTimeout(() => speak("coco", one(ES.lines.done)), 600); }
+    }
+    intro();
+  }
+
+  function smart() {
+    Adapt.practice("es", (ok, n) => {
+      addStars(Math.ceil(ok / 2)); missionDone("rev");
+      reward({ stars: starsFor(ok, n), coins: 3, title: `${ok} de ${n}`, help: (H() === "de" ? "Coco schätzt dein Niveau: " : "Coco estimates your level: ") + Adapt.estimate("es").lv, nextLabel: "Otra vez", next: smart });
+    });
+  }
 
   /* ---------- una isla: 5 pasos ---------- */
   const STEPS = ["story", "words", "game", "speak", "slang"];
   function unit(id, idx) {
     const u = unitById(id); if (!u) return home();
+    if (!isOpen(u.level || "A1")) return home();
+    curLv = u.level || "A1";
     AUD.prefetch("k-" + u.id);
     const p = UP(id);
     let cur = idx != null ? idx : p.steps.findIndex(s => !s); if (cur < 0) cur = 0;
@@ -399,6 +537,7 @@ window.Isla = (() => {
     const html = `${head("story", ui("story").es, `<button class="kbtn sea sm" data-act="playall" style="margin-left:auto">▶ Todo</button>`)}
       <div class="row"><button class="chip" data-act="trans" aria-pressed="false">${H() === "de" ? "🇩🇪 Übersetzung" : "🇬🇧 Translation"}</button></div>
       <div class="story">${lines}</div>
+      ${(u.tips || []).map(tp => `<div class="note-k" style="background:var(--grape-2)">🧩 ${esc(tp.es)}<span class="kh" style="margin-top:4px">${esc(hp(tp))}</span></div>`).join("")}
       ${u.note ? `<div class="note-k">💡 ${esc(u.note.es)}<span class="kh" style="margin-top:4px">${esc(hp(u.note))}</span></div>` : ""}
       ${sounds}
       <div class="stack" id="qsec"><div class="ghead">${narrBtn("questions")}<span class="t">${esc(ui("questions").es)}<small>${esc(hp(ES.narr.questions))}</small></span></div>${qs}</div>`;
@@ -537,13 +676,15 @@ window.Isla = (() => {
     async function round() {
       if (r >= seq.length) return o.onEnd(score, seq.length);
       const w = seq[r], reading = o.mixed && r % 2 === 1;
-      const others = pick(pool.filter(x => x.pic !== w.pic && x.es !== w.es), 3);
+      const nOpt = Adapt.kidOpts(), wl = w.unit ? ((unitById(w.unit) || {}).level || "A1") : curLv, showW = wl !== "A1";
+      const others = pick(pool.filter(x => x.pic !== w.pic && x.es !== w.es), nOpt - 1);
       const opts = shuffle([w, ...others]);
       let locked = false;
       const key = reading ? "read" : "listen";
       box.innerHTML = `${head(key, reading ? "Lee y toca el dibujo" : ui("listen").es, `<span class="count">${r + 1}/${seq.length}</span>`)}
         ${reading ? `<div class="prompt-word">${esc(w.es)}</div>` : `<button class="big-play" data-act="g-rep" aria-label="Escuchar otra vez">🔊</button>`}
-        <div class="opts">${opts.map(x => `<button class="opt pic" data-act="g-pick" data-ok="${x === w ? 1 : 0}" aria-label="${esc(x.es)}">${x.pic}</button>`).join("")}</div>
+        <div class="opts ${nOpt >= 6 ? "six" : ""}">${opts.map(x => `<button class="opt pic" data-act="g-pick" data-ok="${x === w ? 1 : 0}" aria-label="${esc(x.es)}">${x.pic}${showW && !reading ? `<small class="ow">${esc(hp(x))}</small>` : ""}</button>`).join("")}</div>
+        ${nOpt >= 6 ? `<p class="kh" style="text-align:center">🔥 ${H() === "de" ? "Profi-Modus: mehr Bilder!" : "Pro mode: more pictures!"}</p>` : ""}
         <p class="fb-k" id="g-fb"></p>`;
       Object.assign(ACT, {
         "g-rep": el => sayW(w.es, el),
@@ -551,7 +692,7 @@ window.Isla = (() => {
           if (locked) return; locked = true;
           const ok = el.dataset.ok === "1";
           el.classList.add(ok ? "ok-x" : "bad-x");
-          if (ok) { score++; right(el); } else { wrong(); $('.opt[data-ok="1"]', box).classList.add("ok-x"); }
+          if (ok) { score++; right(el, wl); } else { wrong(wl); $('.opt[data-ok="1"]', box).classList.add("ok-x"); }
           $("#g-fb").textContent = (ok ? "✓ " : "") + w.es;
           o.onAnswer && o.onAnswer(w, ok);
           const go = () => { r++; round(); };
@@ -764,7 +905,7 @@ window.Isla = (() => {
 
   function album() {
     const t = T();
-    const items = [...ES.units.map(u => [u.id, u.sticker, u.title, hp(u)]), ...EXTRA.map(x => [x[0], x[1], x[2], H() === "de" ? x[3] : x[4]])];
+    const items = [...ES.levels.filter(L => ES.exams[L.id]).map(L => ["examen-" + L.id, L.trophy, ES.exams[L.id].title, hp(ES.exams[L.id])]), ...ES.units.map(u => [u.id, u.sticker, u.title, hp(u)]), ...EXTRA.map(x => [x[0], x[1], x[2], H() === "de" ? x[3] : x[4]])];
     stageView(`<div class="ghead"><span class="t">${esc(ui("album").es)}<small>${t.stickers.length} / ${items.length}</small></span></div>
       <div class="album">${items.map(([id, p, es, h]) => { const has = t.stickers.includes(id); return `<div class="stk-c ${has ? "" : "locked"}"><span class="pic">${p}</span><b>${esc(es)}</b><span class="kh">${has ? esc(h) : "?"}</span></div>`; }).join("")}</div>`, {});
   }
@@ -843,7 +984,9 @@ Devuelve SOLO JSON: {"coco":"tu frase en español","ayuda":"traducción al ${hel
 
   function route(parts) {
     const [a, b] = parts;
-    if (a === "u") return unit(b);
+    if (a === "u") return unit(parts.slice(1).join("-"));
+    if (a === "examen") return exam(b);
+    if (a === "desafio") return smart();
     if (a === "repaso") return review();
     if (a === "rapido") return fast();
     if (a === "simon") return simonScreen();

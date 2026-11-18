@@ -854,6 +854,10 @@ window.DE = {
   /* Niveles del taller (gremios alemanes): XP mínima y nombre. */
   levels: [[0, "Lehrling I"], [120, "Lehrling II"], [300, "Lehrling III"], [550, "Geselle I"], [850, "Geselle II"], [1250, "Geselle III"], [1750, "Meister I"], [2400, "Meister II"], [3200, "Meister III"]],
 
+  /* Lecturas por nivel y exámenes A2–B2 (los rellenan los archivos content/de-*.js). */
+  texts: [],
+  exams: {},
+
   /* Escenarios del tutor con IA */
   scenes: [
     { id: "frei", t: "Conversación libre", role: "un compañero de tándem amable de Essen", start: "Hallo! Ich bin Jan. Wie heißt du und woher kommst du?" },

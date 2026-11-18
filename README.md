@@ -4,6 +4,8 @@ App web para aprender idiomas en familia, pensada para iPad y celular. Se instal
 
 - **Isla Ñ** (niños, ~9 años): español con Coco, un loro dominicano. Nueve islas con un cuento, palabras, juegos (escuchar y tocar, memoria, ordenar frases, «Simón dice»), práctica oral y expresiones de 9 países hispanos. Las instrucciones se oyen en alemán o en inglés. Hay monedas, tienda para vestir a Coco, cofre diario y álbum de pegatinas.
 - **Werkstatt Ü** (adultos, A1.4 → A2): alemán con Lena. Tarjetas der/die/das con repetición espaciada, 13 temas de gramática con las trampas típicas del hispanohablante, 9 diálogos para escuchar, imitar y dictar, entrenamiento de pronunciación con 6 voces, simulador del Goethe-Zertifikat A1, alemán coloquial por regiones y cultura. Hay XP, niveles (Lehrling → Geselle → Meister) e insignias.
+- **Niveles A1 → B2 en los dos idiomas**: el niño avanza por cuatro archipiélagos (A1, A2, B1, B2) y cada uno termina con un «Gran Desafío» que abre el siguiente. El adulto tiene vocabulario, gramática, diálogos, lecturas y un examen Goethe por nivel.
+- **Sistema adaptativo** (`adapt.js`): la primera vez hay una prueba de nivel adaptativa. Después, cada respuesta actualiza el nivel estimado del alumno, y la app ajusta la dificultad de los juegos, elige qué practicar y avisa cuando toca subir de nivel. El banco de preguntas se genera solo a partir del contenido.
 - **Método**: por qué está hecha así, con las fuentes (repetición espaciada, práctica de recuperación, input comprensible, instrucción explícita, entrenamiento de alta variabilidad).
 
 ## Cómo está hecha
@@ -15,7 +17,9 @@ Una sola página en HTML y JavaScript, sin frameworks ni dependencias en el nave
 | `index.html` | Núcleo: estilos, motor de audio (voces, efectos y música generada en vivo), guardado del progreso, portada y método |
 | `isla.js` | Isla Ñ (mundo del niño) |
 | `werkstatt.js` | Werkstatt Ü (mundo del adulto) |
-| `es-data.js`, `de-data.js` | Todo el contenido de los cursos |
+| `es-data.js`, `de-data.js` | Contenido base (A1) |
+| `content/` | Niveles A1–B2 (`es-*.js`, `de-*.js`), la especificación `SPEC.md` y el validador `check.js` |
+| `adapt.js` | Motor adaptativo: prueba de nivel, modelo del alumno y entrenamiento inteligente |
 | `sw.js` | Service worker: la app funciona sin conexión |
 | `build_audio.py` | Genera las voces con edge-tts (caché en `audio-cache/`) |
 | `build.py` | Junta todo en `public/`, que es lo que se publica |
@@ -27,6 +31,7 @@ Requiere Python 3.11 con `edge-tts` y `Pillow`, Node (solo para leer los datos) 
 
 ```bash
 python build_audio.py   # solo si cambiaste algún texto de es-data.js o de-data.js
+node content/check.js   # valida todo el contenido
 python build.py         # regenera public/
 ```
 

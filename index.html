@@ -174,8 +174,25 @@ dialog::backdrop{background:rgba(10,16,22,.5)}
 @media (max-width:460px){.method-strip{grid-template-columns:1fr}.door h2{font-size:34px}.door{padding:20px}.door .art{transform:scale(.75);transform-origin:top right}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>
+/* Modo app en móvil: sin zoom, sin rebote, sin selección accidental, respuesta táctil inmediata. */
+html,body{overscroll-behavior:none}
+html{touch-action:manipulation}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg{-webkit-user-drag:none}
+button,a,.btn,.chip,.say,.mic{transition:transform .08s ease,filter .08s ease}
+button:active:not(:disabled),.btn:active,.chip:active,a.pcard:active,a.tcard:active,a.gt:active,a.node:active,a.m-item:active,a.door:active{transform:scale(.96);filter:brightness(.97)}
+.install{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + var(--navh) + env(safe-area-inset-bottom,0px));z-index:45;background:var(--ink);color:var(--bg);border-radius:20px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:560px;margin:0 auto}
+.install img{width:44px;height:44px;border-radius:12px;flex:none}
+.install p{flex:1;font-size:14px;line-height:1.35}
+.install b{display:block;font-size:15px}
+.install .x{border:0;background:transparent;color:inherit;font-size:20px;width:36px;height:36px;flex:none}
+.install .go{border:0;background:var(--sun);color:#3A2A00;border-radius:12px;padding:8px 12px;font-weight:800;flex:none}
+</style>
 <style id="css-isla"></style>
 <style id="css-werk"></style>
+<style id="css-adapt"></style>
 
 <header class="top"><div class="top-in">
   <a class="brand" href="#" aria-label="Inicio"><span class="n">Ñ</span><span class="amp">&amp;</span><span class="u">Ü</span></a>
@@ -201,6 +218,13 @@ dialog::backdrop{background:rgba(10,16,22,.5)}
 
 <script src="es-data.js"></script>
 <script src="de-data.js"></script>
+<script src="content/es-a1.js"></script>
+<script src="content/es-a2.js"></script>
+<script src="content/es-b1.js"></script>
+<script src="content/es-b2.js"></script>
+<script src="content/de-a2.js"></script>
+<script src="content/de-b1.js"></script>
+<script src="content/de-b2.js"></script>
 <script src="audio-manifest.js"></script>
 <script>
 /* ================= utilidades ================= */
@@ -354,7 +378,7 @@ const AUD = {
       .catch(() => { this.pend.delete(fi); return null; });
     this.pend.set(fi, p); return p;
   },
-  prefetch(group) { if (!this.M) return; const fi = this.M.f.indexOf("audio/" + group + ".mp3"); if (fi >= 0) this.load(fi); },
+  prefetch(group) { if (!this.M) return; const fi = this.M.g ? this.M.g[group] : this.M.f.indexOf("audio/" + group + ".mp3"); if (fi != null && fi >= 0) this.load(fi); },
   async play(tag, t, rate = 1) {
     const c = this.clip(tag, t); if (!c || !this.ensure()) return false;
     this.unlock();
@@ -589,6 +613,9 @@ function openSettings() {
     <div class="field"><span class="lbl">Acento de las palabras en Isla Ñ</span>
       <div class="seg">${[["mix", "Latinoamérica"], ["es", "España"]].map(([v, l]) => `<button class="chip" data-act="set-accent" data-v="${v}" aria-pressed="${(st.accent === "es" ? "es" : "mix") === v}">${l}</button>`).join("")}</div>
       <p class="small muted">Los personajes siempre hablan con el acento de su país.</p></div>
+    <div class="field"><span class="lbl">Prueba de nivel</span>
+      <p class="small muted">Nivel estimado ahora: español ${esc(Adapt.estimate("es").lv)} · alemán ${esc(Adapt.estimate("de").lv)}. Se ajusta solo con cada respuesta.</p>
+      <div class="row"><button class="btn sm" data-act="pl-es">Repetir la del niño</button><button class="btn sm" data-act="pl-de">Repetir la de alemán</button></div></div>
     <div class="field"><label for="kidname">Nombre del niño (opcional)</label><input id="kidname" value="${esc(st.kidName)}" maxlength="24" placeholder="Para saludarlo en la isla"></div>
     ${OFF.ok ? `<div class="field"><span class="lbl">Sin internet</span>
       <p class="small muted">Guarda todas las voces en este dispositivo (unos 34 MB) para usar la app en el avión o sin datos.</p>
@@ -608,6 +635,8 @@ function openSettings() {
   $("#s-nar").onchange = e => { S.settings.narr = e.target.checked; save(); };
   const set = (k, v) => { S.settings[k] = v; save(); openSettings(); };
   Object.assign(GACT, {
+    "pl-es": () => { $("#dlg-settings").close(); document.body.dataset.world = "isla"; history.replaceState(null, "", "#isla"); Adapt.placement("es", "#isla"); },
+    "pl-de": () => { $("#dlg-settings").close(); document.body.dataset.world = "werk"; history.replaceState(null, "", "#werkstatt"); Adapt.placement("de", "#werkstatt"); },
     offline: async el => {
       if (!AUD.M) return;
       el.disabled = true; const st = $("#off-st"), files = AUD.M.f; let n = 0, fail = 0;
@@ -690,6 +719,7 @@ function renderMethod() {
       <div class="card"><span class="num">5</span><h3>Hablar y recibir corrección</h3><p>Producir obliga a notar lo que falta (Swain), y los metaanálisis sobre corrección (Lyster y Saito, 2010; Li, 2010) muestran que el feedback ayuda. Aquí se habla con el micrófono, se escribe con corrección y se conversa con un tutor.</p></div>
       <div class="card"><span class="num">6</span><h3>Pronunciación: muchas voces distintas</h3><p>Un metaanálisis de 79 estudios (2025) respalda el entrenamiento de alta variabilidad: oír pares como «Kirche / Kirsche» en voces diferentes. Por eso el laboratorio de pronunciación usa 6 voces de Alemania, Austria y Suiza.</p></div>
       <div class="card"><span class="num">7</span><h3>Las cuatro ramas</h3><p>Paul Nation propone repartir el tiempo entre input, output, estudio de la lengua y fluidez. El plan diario de Werkstatt Ü y la misión diaria de Isla Ñ siguen ese reparto.</p></div>
+      <div class="card"><span class="num">9</span><h3>Dificultad a la medida</h3><p>Se aprende más cuando la tarea está justo por encima de lo que ya sabes (la «zona de desarrollo próximo» de Vygotsky). Un estudio de Wilson y colegas (2019) calcula que el punto óptimo está en acertar alrededor del 85 %. Por eso la app empieza con una prueba de nivel adaptativa, como los exámenes por computadora, y después ajusta sola la dificultad: más opciones y temas del nivel siguiente si aciertas casi todo, más ayuda si fallas.</p></div>
       <div class="card"><span class="num">8</span><h3>Horas y ganas</h3><p>En clase, los que empiezan entre los 8 y los 11 años avanzan rápido y las horas de exposición pesan más que la edad (proyecto BAF de Carmen Muñoz). Para un niño, disfrutar es condición para aprender: por eso hay monedas, tienda y premios.</p></div>
     </div>
     <h2>Dónde se queda corto Duolingo</h2>
@@ -704,6 +734,7 @@ function renderMethod() {
         <tr><td>Output + feedback</td><td>«¡Habla!», Simón dice, retos con un adulto</td><td>Dictado, examen oral simulado, escritura corregida, tutor</td></tr>
         <tr><td>Fluidez</td><td>Contrarreloj de 45 segundos</td><td>Shadowing de los diálogos</td></tr>
         <tr><td>Lengua real</td><td>Expresiones de 9 países hispanos</td><td>Coloquial por regiones, cultura y calendario de invierno</td></tr>
+        <tr><td>Dificultad adaptativa</td><td>Prueba de nivel, juegos que suben o bajan de dificultad, Desafío de Coco, Gran Desafío por nivel</td><td>Prueba de nivel, entrenamiento inteligente, repaso de lo fallado, aviso para subir de nivel, exámenes Goethe A1–B2</td></tr>
         <tr><td>Motivación</td><td>Estrellas, monedas, tienda de Coco, álbum</td><td>XP y niveles del taller (Lehrling → Meister), racha, insignias</td></tr>
       </tbody></table></div>
     <h2>Cómo usarlo</h2>
@@ -745,7 +776,37 @@ const OFF = { ok: false, done: () => { try { return localStorage.getItem("nyu-of
 if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("sw.js").then(() => { OFF.ok = true; }).catch(() => {});
 }
+
+/* Sin zoom en ninguna parte: iOS ignora user-scalable=no, así que se bloquean los gestos de pellizco. */
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+document.addEventListener("dblclick", e => { if (!e.target.closest("input,textarea")) e.preventDefault(); }, { passive: false });
+addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+
+/* Aviso para instalarla como app (solo en el móvil, fuera de Claude y si aún no está instalada). */
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+document.documentElement.classList.toggle("standalone", isStandalone());
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; showInstall(); });
+function showInstall() {
+  if (window.claude || isStandalone() || !matchMedia("(pointer: coarse)").matches) return;
+  try { if (localStorage.getItem("nyu-install-x")) return; } catch (e) {}
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (!ios && !installEvt) return;
+  if ($(".install")) return;
+  const d = document.createElement("div"); d.className = "install"; d.setAttribute("role", "dialog");
+  d.innerHTML = `<img src="icon-192.png" alt=""><p><b>Úsala como app</b>${ios ? "Toca Compartir ⬆️ y luego «Añadir a pantalla de inicio»." : "Instálala para abrirla a pantalla completa, también sin internet."}</p>${ios ? "" : '<button class="go" data-i="go">Instalar</button>'}<button class="x" data-i="x" aria-label="Cerrar">✕</button>`;
+  d.addEventListener("click", async e => {
+    const b = e.target.closest("[data-i]"); if (!b) return;
+    if (b.dataset.i === "go" && installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (er) {} installEvt = null; }
+    try { localStorage.setItem("nyu-install-x", "1"); } catch (er) {}
+    d.remove();
+  });
+  document.body.appendChild(d);
+}
+setTimeout(showInstall, 2500);
 </script>
+<script src="adapt.js"></script>
 <script src="isla.js"></script>
 <script src="werkstatt.js"></script>
 <script>

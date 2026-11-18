@@ -198,7 +198,7 @@ window.Werk = (() => {
   const DAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
   /* ---------- XP, niveles, insignias ---------- */
-  let combo = 0;
+  let combo = 0, curLv = "A1";
   function addXP(n, el) {
     if (n <= 0) return;
     const before = levelOf(T().xp || 0).i;
@@ -210,12 +210,13 @@ window.Werk = (() => {
       SFX.play("level"); confetti(); speak("de-f", de);
     }, 700);
   }
-  function good(el, xp = 5) {
+  function good(el, xp = 5, lv) {
+    Adapt.record("de", lv || curLv, true);
     combo++; SFX.play("ok"); addXP(xp, el);
     if (combo % 3 === 0) { setTimeout(() => SFX.play("combo"), 200); addXP(5); }
     const c = $("#combo"); if (c) { c.hidden = combo < 2; c.textContent = "🔥 " + combo + " seguidas"; }
   }
-  function bad() { combo = 0; SFX.play("bad"); vibrate(40); const c = $("#combo"); if (c) c.hidden = true; }
+  function bad(lv) { Adapt.record("de", lv || curLv, false); combo = 0; SFX.play("bad"); vibrate(40); const c = $("#combo"); if (c) c.hidden = true; }
   function badges() {
     const t = T(), st = t.srs, firm = Object.values(st).filter(c => c.b >= 4).length;
     const a1 = D.grammar.filter(g => g.level === "A1");
@@ -231,12 +232,13 @@ window.Werk = (() => {
       ["👂", "Feines Ohr", pr.n >= 50 && pr.ok / pr.n >= .8],
       ["🎧", "Alle Dialoge", D.dialogs.every(d => (t.dlg[d.id] || {}).q != null)],
       ["🎓", "Prüfungsreif", exSum >= 60],
-      ["💬", "Plaudertasche", (t.tutorN || 0) >= 20]
+      ["💬", "Plaudertasche", (t.tutorN || 0) >= 20],
+      ...["A2", "B1", "B2"].filter(l => D.exams[l]).map(l => { const r = t.exam[l] || {}, ks = ["hoeren", "lesen", "schreiben", "sprechen"], all = ks.every(k => r[k] != null); return ["🏅", l + " bestanden", all && (l === "A2" ? ks.reduce((a, k) => a + r[k], 0) >= 60 : ks.every(k => r[k] >= 15))]; })
     ];
   }
 
   /* ---------- navegación ---------- */
-  const NAV = [["", "🏠", "Hoy"], ["wortschatz", "🃏", "Wörter"], ["grammatik", "🧩", "Grammatik"], ["hoeren", "🎧", "Hören"], ["aussprache", "👂", "Aussprache"], ["pruefung", "🎓", "Prüfung"], ["umgangssprache", "🗣️", "Umgangssprache"], ["kultur", "🎄", "Kultur"], ["tutor", "💬", "Tutor IA"], ["kurs", "✅", "Mi curso"]];
+  const NAV = [["", "🏠", "Hoy"], ["wortschatz", "🃏", "Wörter"], ["grammatik", "🧩", "Grammatik"], ["hoeren", "🎧", "Hören"], ["lesen", "📰", "Lesen"], ["training", "🧠", "Training"], ["aussprache", "👂", "Aussprache"], ["pruefung", "🎓", "Prüfung"], ["umgangssprache", "🗣️", "Umgangssprache"], ["kultur", "🎄", "Kultur"], ["tutor", "💬", "Tutor IA"], ["kurs", "✅", "Mi curso"]];
   const href = k => "#werkstatt" + (k ? "-" + k : "");
   function navs(cur) {
     const main = ["", "wortschatz", "grammatik", "hoeren"], inMore = !main.includes(cur);
@@ -266,11 +268,12 @@ window.Werk = (() => {
   function seenTopics() { const s = new Set(); D.course.forEach(l => l.items.forEach(([id, , g]) => { if (T().course[id]) g.forEach(x => s.add(x)); })); return s; }
   function suggestTopic() {
     const seen = seenTopics(), gym = T().gym;
-    let list = D.grammar.filter(g => (seen.size ? seen.has(g.id) : g.level === "A1")); if (!list.length) list = D.grammar;
+    const lv = myLv(), atLv = D.grammar.filter(g => g.level === lv), seenLv = atLv.filter(g => seen.has(g.id));
+    let list = seenLv.length ? seenLv : atLv; if (!list.length) list = D.grammar;
     const sc = g => { const r = gym[g.id]; if (!r) return -1; return r.best + (r.last === today() ? 200 : 0); };
     return [...list].sort((a, b) => sc(a) - sc(b))[0];
   }
-  function suggestDialog() { const d = T().dlg, use = x => { const r = d[x.id] || {}; return (r.n || 0) + (r.q != null ? 1 : 0); }; return [...D.dialogs].sort((a, b) => use(a) - use(b))[0]; }
+  function suggestDialog() { const d = T().dlg, lv = myLv(), use = x => { const r = d[x.id] || {}; return (r.n || 0) + (r.q != null ? 1 : 0) + (x.level === lv ? 0 : 50); }; return [...D.dialogs].sort((a, b) => use(a) - use(b))[0]; }
   function newLeft() { const nt = T().newToday; if (nt.d !== today()) { nt.d = today(); nt.n = 0; } return Math.max(0, T().newPerDay - nt.n); }
   function buildQueue() {
     const st = T().srs, all = allCards();
@@ -282,7 +285,9 @@ window.Werk = (() => {
   /* ================= HOY ================= */
   let greeted = false;
   function hoy() {
+    if (Adapt.needs("de")) return Adapt.placement("de", "#werkstatt");
     AUD.prefetch("d-coach");
+    const est = Adapt.estimate("de"), up = LVS.indexOf(est.lv) > LVS.indexOf(myLv()) && D.grammar.some(g => g.level === est.lv);
     const t = T(), st = t.srs, all = allCards();
     const due = all.filter(c => st[c.id] && isDue(st[c.id])).length, nl = newLeft();
     const p = plan(), g = suggestTopic(), d = suggestDialog();
@@ -312,7 +317,10 @@ window.Werk = (() => {
           <div class="card lvlcard"><div class="lvlrow"><span class="wlabel">Tu nivel</span><span class="spacer"></span><span class="wlabel">🔥 ${streakNow("de")} días</span></div>
             <div class="lvlrow"><span class="lvlname">${esc(L.name)}</span><span class="muted small">${t.xp || 0} XP${L.next ? " · faltan " + (L.next - (t.xp || 0)) : ""}</span></div>
             <div class="xpbar"><i style="width:${pct}%"></i></div>
-            ${gd != null ? `<span class="small">⏳ ${gd > 0 ? gd + " días para" : gd === 0 ? "Hoy:" : "Pasó:"} <b>${esc(goal.label || "tu meta")}</b></span>` : ""}</div>
+            ${gd != null ? `<span class="small">⏳ ${gd > 0 ? gd + " días para" : gd === 0 ? "Hoy:" : "Pasó:"} <b>${esc(goal.label || "tu meta")}</b></span>` : ""}
+            <div class="lvlrow" style="margin-top:4px"><span class="wlabel">Nivel de idioma</span><span class="spacer"></span><b class="wf">${myLv()}</b><span class="muted small">· estimado ${est.lv} ${est.band}</span></div>
+            ${up ? `<div class="fb mid">Tus respuestas ya son de ${est.lv}. <button class="btn sm" data-act="lvup" data-l="${est.lv}" style="margin-left:6px">Pasar a ${est.lv}</button></div>` : ""}
+            <a class="btn" href="#werkstatt-training" style="margin-top:6px">🧠 Entrenamiento inteligente</a></div>
           <div class="card"><span class="wlabel">Esta semana</span>
             <div class="week" style="margin-top:10px">${week.map(w => `<div class="d ${w.k === today() ? "today" : ""}"><span class="b ${w.v ? "on" : ""}" style="height:${Math.max(6, w.v / maxW * 70)}px"></span>${w.l}</div>`).join("")}</div></div>
           <div class="card"><span class="wlabel">Abzeichen · insignias</span>
@@ -322,7 +330,8 @@ window.Werk = (() => {
             <div class="stack" style="margin-top:10px"><input id="g-l" value="${esc(goal.label)}" placeholder="Examen A1, fin del curso…"><input id="g-d" type="date" value="${esc(goal.date)}"><button class="btn" data-act="g-save">Guardar</button></div></details>
         </div>
       </div>`, {
-      "g-save": () => { t.goal = { label: $("#g-l").value.trim(), date: $("#g-d").value }; save(); hoy(); toast("Meta guardada"); }
+      "g-save": () => { t.goal = { label: $("#g-l").value.trim(), date: $("#g-d").value }; save(); hoy(); toast("Meta guardada"); },
+      lvup: el => { const l = el.dataset.l; t.level = l; Object.entries(D.themes).forEach(([k, th]) => { if ((th.level || "A1") === l && !t.themes.includes(k)) t.themes.push(k); }); save(); SFX.play("level"); confetti(); toast("Nivel " + l + " activado: nuevas tarjetas, gramática y diálogos"); hoy(); }
     });
     if (!greeted && AUD.running()) { greeted = true; setTimeout(() => speak("de-f", hde), 300); }
   }
@@ -402,7 +411,7 @@ window.Werk = (() => {
       }
     }
     function doGrade(c, g, el) {
-      srsGrade(st[c.id], g); n++;
+      srsGrade(st[c.id], g); n++; curLv = (D.themes[c.th] || {}).level || "A1";
       if (g >= 2) { rightN++; good(el, 3); } else if (g === 1) { combo = 0; addXP(2, el); } else { bad(); addXP(1, el); }
       if (g === 0 && !again.has(c.id)) { again.add(c.id); q.push(c); }
       save(); i++; setTimeout(show, 180);
@@ -432,7 +441,7 @@ window.Werk = (() => {
         <div class="legend"><span style="--c:var(--das)">Firmes ${cnt.firm}</span><span style="--c:var(--der)">Repasando ${cnt.rep}</span><span style="--c:#FFC531">Aprendiendo ${cnt.apr}</span><span style="--c:var(--surface-2)">Sin ver ${cnt.nuevo}</span></div>
         <div class="artkey" style="margin-top:12px"><span class="a-der">der · masculino</span><span class="a-die">die · femenino</span><span class="a-das">das · neutro</span><span class="a-pl">solo plural</span></div></div>
       <h2 class="wf" style="font-size:20px;margin:22px 0 10px">Qué entra como nuevo</h2>
-      <div class="row">${Object.entries(D.themes).map(([k, th]) => `<button class="chip" data-act="th" data-k="${k}" aria-pressed="${t.themes.includes(k)}">${esc(th.name)}</button>`).join("")}</div>
+      ${LVS.map(l => { const ths = Object.entries(D.themes).filter(([, th]) => (th.level || "A1") === l); return ths.length ? `<div class="row" style="margin-bottom:8px"><span class="lvl ${l === "A1" || l === "A2" ? "" : "a2"}">${l}</span>${ths.map(([k, th]) => `<button class="chip" data-act="th" data-k="${k}" aria-pressed="${t.themes.includes(k)}">${esc(th.name)}</button>`).join("")}</div>` : ""; }).join("")}
       <div class="row" style="margin-top:10px"><span class="small muted">Nuevas por día:</span>${[5, 10, 15, 20].map(v => `<button class="chip" data-act="npd" data-n="${v}" aria-pressed="${t.newPerDay === v}">${v}</button>`).join("")}</div>
       <h2 class="wf" style="font-size:20px;margin:22px 0 10px">Palabras de tu clase</h2>
       <div class="two">
@@ -497,11 +506,11 @@ Devuelve SOLO un array JSON (máximo 40 elementos): [{"art":"der","w":"Termin","
     if (id) return topic(id);
     const gym = T().gym, seen = seenTopics();
     page("grammatik", `${whead("🧩", "Grammatik", "La regla en español, la trampa del hispanohablante y práctica de memoria. Con 80 % el tema queda dominado.", "var(--grape-2)")}
-      <div class="cards">${D.grammar.map(g => { const r = gym[g.id]; return `<a class="tcard" href="#werkstatt-grammatik-${g.id}">
+      ${LVS.map(l => { const gs = D.grammar.filter(g => g.level === l); return gs.length ? `<h2 class="wf" style="font-size:19px;margin:18px 0 10px">${l}${l === myLv() ? " · tu nivel" : ""}</h2><div class="cards">${gs.map(g => { const r = gym[g.id]; return `<a class="tcard" href="#werkstatt-grammatik-${g.id}">
         <div class="top"><span class="ic">${GIC[g.id] || "🧩"}</span><span class="lvl ${g.level === "A2" ? "a2" : ""}">${g.level}</span>${seen.has(g.id) ? '<span class="seen">✓ visto en clase</span>' : ""}</div>
         <h3>${esc(g.title)}</h3><span class="muted small">${esc(g.de)} · ${g.items.length} ejercicios</span>
         <div class="bar"><i style="width:${r ? r.best : 0}%;background:${r && r.best >= 80 ? "var(--das)" : "var(--der)"}"></i></div>
-        <span class="small muted">${r ? "Mejor: " + r.best + " %" + (r.best >= 80 ? " · dominado ✓" : "") : "Sin practicar"}</span></a>`; }).join("")}</div>`);
+        <span class="small muted">${r ? "Mejor: " + r.best + " %" + (r.best >= 80 ? " · dominado ✓" : "") : "Sin practicar"}</span></a>`; }).join("")}</div>` : ""; }).join("")}`);
   }
   function fillQ(it, ansText) {
     let q = it.q;
@@ -529,14 +538,15 @@ Devuelve SOLO un array JSON (máximo 40 elementos): [{"art":"der","w":"Termin","
       </div>`, { start: () => drill(g) });
   }
   function drill(g) {
-    const items = shuffle(g.items); let i = 0, ok = 0;
+    curLv = g.level; const weak = T().weak = T().weak || {}, wk = it => g.id + ":" + g.items.indexOf(it);
+    const items = [...shuffle(g.items.filter(it => weak[wk(it)])), ...shuffle(g.items.filter(it => !weak[wk(it)]))]; let i = 0, ok = 0;
     const box = $("#dr");
     function show() {
       if (i >= items.length) return end();
       const it = items[i]; let done = false;
       const headH = `<div class="sbar"><div class="bar"><i style="width:${(i / items.length) * 100}%;background:var(--grape)"></i></div><span class="wlabel">${i + 1}/${items.length}</span></div><span class="combo-w" id="combo" ${combo >= 2 ? "" : "hidden"}>🔥 ${combo} seguidas</span>`;
       const after = (isOk, correctText, userText, el) => {
-        done = true; if (isOk) { ok++; good(el, 5); } else bad();
+        done = true; if (isOk) { ok++; good(el, 5); delete weak[wk(it)]; } else { bad(); weak[wk(it)] = 1; } save();
         const full = it.t === "order" ? it.w.join(" ") : it.t === "mc" ? (it.q.includes("___") ? fillQ(it, it.o[it.a]) : it.o[it.a]) : fillQ(it, it.a[0]);
         $("#dfb").innerHTML = `<div class="fb ${isOk ? "ok" : "bad"}">${isOk ? one(D.coach.right) : "Respuesta: " + esc(correctText)}</div>
           <div class="row" style="flex-wrap:nowrap">${sayBtn(full, "de-f")}<span class="exde">${esc(full)}</span></div>
@@ -594,7 +604,7 @@ Devuelve SOLO un array JSON (máximo 40 elementos): [{"art":"der","w":"Termin","
     if (id) return dialog(id);
     const d = T().dlg;
     page("hoeren", `${whead("🎧", "Hören", "Diálogos de la vida real con voces distintas. Tres modos: escuchar, <b>shadowing</b> (repites en la pausa) y <b>dictado</b>.", "var(--sea-2)")}
-      <div class="cards">${D.dialogs.map(x => { const r = d[x.id] || {}; return `<a class="tcard" href="#werkstatt-hoeren-${x.id}"><div class="top"><span class="ic">💬</span><span class="lvl">${x.level}</span>${r.q != null ? `<span class="seen">✓ ${r.q}/${x.q.length}</span>` : ""}</div><h3>${esc(x.title)}</h3><span class="muted small">«${esc(x.de)}» · ${x.lines.length} frases</span></a>`; }).join("")}</div>`);
+      ${LVS.map(l => { const ds = D.dialogs.filter(x => (x.level || "A1") === l); return ds.length ? `<h2 class="wf" style="font-size:19px;margin:18px 0 10px">${l}</h2><div class="cards">${ds.map(x => { const r = d[x.id] || {}; return `<a class="tcard" href="#werkstatt-hoeren-${x.id}"><div class="top"><span class="ic">💬</span><span class="lvl">${x.level}</span>${r.q != null ? `<span class="seen">✓ ${r.q}/${x.q.length}</span>` : ""}</div><h3>${esc(x.title)}</h3><span class="muted small">«${esc(x.de)}» · ${x.lines.length} frases</span></a>`; }).join("")}</div>` : ""; }).join("")}`);
   }
   function lcsMark(target, user) {
     const a = target.split(/\s+/), b = norm(user).split(" ").map(deUml), A = a.map(w => deUml(norm(w)));
@@ -606,6 +616,7 @@ Devuelve SOLO un array JSON (máximo 40 elementos): [{"art":"der","w":"Termin","
   }
   function dialog(id) {
     const d = D.dialogs.find(x => x.id === id); if (!d) return hoeren();
+    curLv = d.level || "A1";
     let mode = "read", showEs = false, slow = false;
     const tags = dialogTags(d.who), answers = {}, order = Object.keys(d.who);
     AUD.prefetch("d-dl-" + d.id);
@@ -739,7 +750,7 @@ Devuelve SOLO un array JSON (máximo 40 elementos): [{"art":"der","w":"Termin","
     AUD.prefetch("d-exam");
     if (!sec) {
       const all = SECS.every(([k]) => ex[k] != null), sum = SECS.reduce((a, [k]) => a + (ex[k] || 0), 0);
-      return page("pruefung", `${whead("🎓", "Prüfung A1", "Goethe-Zertifikat A1: Start Deutsch 1. Cuatro partes de 25 puntos; se aprueba con 60 de 100.", "var(--sun-2)")}
+      return page("pruefung", `${lvTabs("A1", l => "#werkstatt-pruefung-" + l)}${whead("🎓", "Prüfung A1", "Goethe-Zertifikat A1: Start Deutsch 1. Cuatro partes de 25 puntos; se aprueba con 60 de 100.", "var(--sun-2)")}
         <div class="cards">${SECS.map(([k, i, t, dsc]) => `<a class="tcard" href="#werkstatt-pruefung-${k}"><div class="top"><span class="ic">${i}</span><span class="wlabel">${t}</span></div><h3>${ex[k] != null ? ex[k] + " / 25" : "Sin hacer"}</h3><div class="bar"><i style="width:${(ex[k] || 0) * 4}%;background:${(ex[k] || 0) >= 15 ? "var(--das)" : "var(--coach)"}"></i></div><span class="small muted">${dsc}</span></a>`).join("")}</div>
         <div class="card" style="margin-top:14px"><b class="wf">Total estimado: ${all ? sum + " / 100 " + (sum >= 60 ? "✅ aprobado" : "· te faltan " + (60 - sum)) : "completa las cuatro partes"}</b><p class="small muted" style="margin-top:4px">Versiones cortas con el mismo tipo de tarea. Formato completo en el <a href="https://www.goethe.de/pro/relaunch/prf/materialien/A1_sd1/sd_1_uebungssatz01.pdf" target="_blank" rel="noopener">modelo oficial</a>.</p></div>`);
     }
@@ -934,7 +945,7 @@ Responde SOLO JSON: {"puntos":[{"punto":"texto del punto","nota":3,"comentario":
     function draw() {
       page("tutor", `${whead("💬", TUT.scene.t, "Escribe o habla como puedas: el tutor sigue la charla y te muestra la versión correcta.", "var(--grape-2)")}
         <div class="row" style="margin-bottom:8px">${D.scenes.map(s => `<button class="chip" data-act="sc" data-id="${s.id}" aria-pressed="${s === TUT.scene}">${esc(s.t)}</button>`).join("")}</div>
-        <div class="row" style="margin-bottom:16px"><span class="small muted">Nivel:</span>${["A1", "A2"].map(l => `<button class="chip" data-act="lv" data-l="${l}" aria-pressed="${lvl === l}">${l}</button>`).join("")}<span class="spacer"></span><button class="btn sm" data-act="reset">Empezar de nuevo</button></div>
+        <div class="row" style="margin-bottom:16px"><span class="small muted">Nivel:</span>${LVS.map(l => `<button class="chip" data-act="lv" data-l="${l}" aria-pressed="${lvl === l}">${l}</button>`).join("")}<span class="spacer"></span><button class="btn sm" data-act="reset">Empezar de nuevo</button></div>
         <div class="chat2" id="cw">${TUT.msgs.map((m, k) => m.r === "ai"
           ? `<div class="tmsg ai"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${sayBtn(m.de, "de-f")}<div class="de">${esc(m.de)}</div></div>${m.es ? `<details><summary class="small muted" style="cursor:pointer">Traducción</summary><p class="small">${esc(m.es)}</p></details>` : ""}${k === TUT.msgs.length - 1 && m.ideas && m.ideas.length ? `<div class="row" style="gap:6px">${m.ideas.map(x => `<button class="chip" data-act="idea" data-t="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}</div>`
           : `<div class="tmsg me"><div class="de">${esc(m.de)}</div>${m.fix ? `<div class="fix">✏️ <b>${esc(m.fix.mejor || "")}</b><br>${esc(m.fix.porque || "")}</div>` : m.ok ? '<span class="small" style="opacity:.8">✓ Bien dicho</span>' : ""}</div>`).join("")}
@@ -983,14 +994,125 @@ Devuelve SOLO JSON: {"reply":"tu respuesta en alemán","es":"traducción al espa
     $$('.chk input[data-id]').forEach(inp => inp.addEventListener("change", () => { c[inp.dataset.id] = inp.checked; save(); SFX.play(inp.checked ? "pop" : "tap"); }));
   }
 
+  /* ================= NIVELES: lecturas, entrenamiento y exámenes A2–B2 ================= */
+  const LVS = ["A1", "A2", "B1", "B2"];
+  const lvTabs = (cur, hrefOf) => `<div class="row" style="margin-bottom:14px">${LVS.map(l => `<a class="chip" href="${hrefOf(l)}" aria-pressed="${l === cur}" style="text-decoration:none">${l}</a>`).join("")}</div>`;
+  const myLv = () => T().level && LVS.includes(T().level) ? T().level : "A1";
+
+  function lesen(id) {
+    if (id) return reader(id);
+    const r = T().read || {};
+    const byLv = LVS.map(l => [l, D.texts.filter(x => x.level === l)]).filter(([, xs]) => xs.length);
+    page("lesen", `${whead("📰", "Lesen", "Textos de verdad por nivel: artículos, blogs y correos. Escucha cada párrafo, mira la traducción si la necesitas y responde.", "var(--sky)")}
+      ${byLv.length ? byLv.map(([l, xs]) => `<h2 class="wf" style="font-size:19px;margin:18px 0 10px">${l}</h2><div class="cards">${xs.map(x => `<a class="tcard" href="#werkstatt-lesen-${x.id}"><div class="top"><span class="ic">📰</span><span class="lvl ${l !== "A1" && l !== "A2" ? "a2" : ""}">${l}</span>${r[x.id] != null ? `<span class="seen">✓ ${r[x.id]}/${x.q.length}</span>` : ""}</div><h3>${esc(x.de)}</h3><span class="muted small">${esc(x.title)} · ${x.paras.length} párrafos</span></a>`).join("")}</div>`).join("") : '<p class="muted">Aún no hay lecturas.</p>'}`);
+  }
+  function reader(id) {
+    const x = D.texts.find(t => t.id === id); if (!x) return lesen();
+    curLv = x.level; AUD.prefetch("d-t-" + x.id);
+    let showEs = false; const ans = {};
+    const draw = () => page("lesen", `<a class="btn sm ghost" href="#werkstatt-lesen">${ICON.back} Lecturas</a>
+      ${whead("📰", x.de, `<span class="lvl">${x.level}</span> ${esc(x.title)}`, "var(--sky)")}
+      <div class="row" style="margin-bottom:10px"><button class="btn primary sm" data-act="all">▶ Leer en voz alta</button><button class="btn sm" data-act="stop">■</button><button class="chip" data-act="es" aria-pressed="${showEs}">Traducción</button></div>
+      <div class="card stack" style="gap:16px">${x.paras.map(([de, es], k) => `<div class="row" style="flex-wrap:nowrap;align-items:flex-start" id="pa${k}"><button class="say" data-act="pa" data-k="${k}" aria-label="Escuchar">${ICON.play}</button><div><p class="exde" style="font-size:17.5px;line-height:1.6">${esc(de)}</p><p class="muted small les" ${showEs ? "" : "hidden"} style="margin-top:4px">${esc(es)}</p></div></div>`).join("")}</div>
+      <div class="card" style="margin-top:14px"><span class="wlabel">Preguntas</span><div class="stack" style="margin-top:10px">${x.q.map(([q, o, a], k) => `<div class="stack" style="gap:8px"><p class="exde">${esc(q)}</p><div class="mcopts">${o.map((t, j) => `<button class="mcopt" data-act="qa" data-q="${k}" data-j="${j}">${esc(t)}</button>`).join("")}</div></div>`).join("")}</div><p id="qres" class="fb" hidden style="margin-top:12px"></p></div>`, {
+      pa: el => speak("de-f", x.paras[+el.dataset.k][0], { btn: el }),
+      stop: () => { SEQ++; stopSpeech(); },
+      all: async () => { const my = ++SEQ; for (let k = 0; k < x.paras.length; k++) { if (my !== SEQ) return; $("#pa" + k).scrollIntoView({ block: "center", behavior: "smooth" }); await speak("de-f", x.paras[k][0], { btn: $(`[data-act="pa"][data-k="${k}"]`) }); await sleep(300); } },
+      es: el => { showEs = !showEs; el.setAttribute("aria-pressed", showEs); $$(".les").forEach(p => p.hidden = !showEs); },
+      qa: el => {
+        const k = +el.dataset.q, j = +el.dataset.j; if (ans[k] != null) return;
+        const ok = j === x.q[k][2]; ans[k] = ok; el.classList.add(ok ? "ok" : "bad");
+        if (ok) good(el, 5); else { bad(); $(`.mcopt[data-q="${k}"][data-j="${x.q[k][2]}"]`).classList.add("ok"); }
+        if (Object.keys(ans).length === x.q.length) {
+          const n = Object.values(ans).filter(Boolean).length; T().read = T().read || {}; T().read[x.id] = Math.max(T().read[x.id] || 0, n); save(); planDone("hoer"); logActivity("de", n);
+          const r = $("#qres"); r.hidden = false; r.className = "fb " + (n === x.q.length ? "ok" : "mid"); r.textContent = n + " de " + x.q.length + (n === x.q.length ? ". ¡Lo entendiste todo!" : ". Vuelve a leer con la traducción y repite.");
+        }
+      }
+    });
+    draw();
+  }
+
+  function training() {
+    Adapt.practice("de", (ok, n) => {
+      const e = Adapt.estimate("de"); planDone("gram"); logActivity("de", ok);
+      overlay(`<span class="lena" style="--s:90px">👩🏼‍🔧</span><h2 class="wf">${ok} / ${n}</h2><p class="muted">Nivel estimado: <b>${e.lv} ${e.band}</b></p><p class="small muted">Cada respuesta ajusta la dificultad de la siguiente sesión.</p><div class="row" style="justify-content:center"><button class="btn" data-act="again">Otra ronda</button><a class="btn primary" href="#werkstatt">Volver a Hoy</a></div>`, { again: () => { closeOverlay(); training(); } });
+      SFX.play("level");
+    });
+  }
+
+  /* Examen genérico A2–B2 con el formato Goethe del nivel. */
+  const PARTS = [["hoeren", "🎧", "Hören"], ["lesen", "📖", "Lesen"], ["schreiben", "✍️", "Schreiben"], ["sprechen", "🗣️", "Sprechen"]];
+  function gexam(lv, part) {
+    const ex = D.exams[lv]; if (!ex) return pruefung();
+    curLv = lv; AUD.prefetch("d-x-" + lv);
+    const res = (T().exam[lv] = T().exam[lv] || {});
+    const backL = `<a class="btn sm ghost" href="#werkstatt-pruefung-${lv}">${ICON.back} ${esc(ex.name)}</a>`;
+    if (!part) {
+      const done = PARTS.filter(([k]) => res[k] != null), sum = PARTS.reduce((a, [k]) => a + (res[k] || 0), 0);
+      return page("pruefung", `${lvTabs(lv, l => "#werkstatt-pruefung-" + l)}${whead("🎓", ex.name, esc(ex.pass || ""), "var(--sun-2)")}
+        <div class="cards">${PARTS.map(([k, i, t]) => `<a class="tcard" href="#werkstatt-pruefung-${lv}-${k}"><div class="top"><span class="ic">${i}</span><span class="wlabel">${t}</span></div><h3>${res[k] != null ? res[k] + " / 25" + (res[k] >= 15 ? " ✅" : "") : "Sin hacer"}</h3><div class="bar"><i style="width:${(res[k] || 0) * 4}%;background:${(res[k] || 0) >= 15 ? "var(--das)" : "var(--coach)"}"></i></div><span class="small muted">${esc((ex.parts || {})[k] || "")}</span></a>`).join("")}</div>
+        <div class="card" style="margin-top:14px"><b class="wf">${done.length === 4 ? "Total: " + sum + " / 100 · " + (lv === "A2" ? (sum >= 60 ? "✅ aprobarías (hace falta 60 de 100)" : "te faltan " + (60 - sum) + " puntos para el 60") : (PARTS.every(([k]) => res[k] >= 15) ? "✅ aprobarías los cuatro módulos" : "algún módulo por debajo del 60 %")) : "Completa los cuatro módulos para ver tu resultado."}</b><p class="small muted" style="margin-top:4px">Versión corta con el mismo tipo de tareas que el examen oficial.</p></div>`);
+    }
+    if (part === "hoeren" || part === "lesen") {
+      const items = ex[part], ans = {}, plays = {};
+      return page("pruefung", `${backL}${whead(part === "hoeren" ? "🎧" : "📖", ex.name + " · " + (part === "hoeren" ? "Hören" : "Lesen"), esc((ex.parts || {})[part] || ""), "var(--sun-2)")}
+        <div class="stack">${items.map((it, k) => `<div class="card stack" style="gap:10px"><span class="wlabel">Teil ${it.teil} · Aufgabe ${k + 1}</span>
+          ${part === "hoeren" ? `<div class="row"><button class="btn" data-act="play" data-k="${k}">🔊 Escuchar (${it.n}×)</button></div><p class="small muted tr" hidden>«${esc(it.text)}»</p>` : `<div class="exde" style="white-space:pre-wrap">${esc(it.text)}</div>`}
+          <p class="exde"><b>${esc(it.q)}</b></p><div class="mcopts">${it.o.map((o, j) => `<button class="mcopt" data-act="a" data-k="${k}" data-j="${j}">${esc(o)}</button>`).join("")}</div></div>`).join("")}</div><div id="res" style="margin-top:14px"></div>`, {
+        play: el => { const k = +el.dataset.k, it = items[k]; plays[k] = (plays[k] || 0) + 1; const left = it.n - plays[k]; el.textContent = left > 0 ? `🔊 Escuchar (${left}×)` : "Ya no quedan escuchas"; if (left <= 0) el.disabled = true; speakScript(it.text); },
+        a: el => {
+          const k = +el.dataset.k, j = +el.dataset.j; if (ans[k] != null) return;
+          const ok = j === items[k].a; ans[k] = ok; el.classList.add(ok ? "ok" : "bad");
+          if (ok) good(el, 4); else { bad(); $(`.mcopt[data-k="${k}"][data-j="${items[k].a}"]`).classList.add("ok"); }
+          if (Object.keys(ans).length === items.length) {
+            const n = Object.values(ans).filter(Boolean).length, pts = Math.round(n / items.length * 25);
+            res[part] = Math.max(res[part] || 0, pts); save(); addXP(20); logActivity("de", n); $$(".tr").forEach(x => x.hidden = false);
+            $("#res").innerHTML = `<div class="fb ${pts >= 15 ? "ok" : "mid"}">${n} de ${items.length} → unos ${pts} de 25 puntos.</div>`; $("#res").scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+      });
+    }
+    const tasks = ex[part], scores = {}; let stopFn = null;
+    const fin = () => { if (Object.keys(scores).length === tasks.length) { const pts = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / tasks.length * 25); res[part] = Math.max(res[part] || 0, pts); save(); planDone("out"); $("#tot").innerHTML = `<div class="fb ${pts >= 15 ? "ok" : "mid"}">Estimación: unos ${pts} de 25 puntos.</div>`; } };
+    page("pruefung", `${backL}${whead(part === "schreiben" ? "✍️" : "🗣️", ex.name + " · " + (part === "schreiben" ? "Schreiben" : "Sprechen"), esc((ex.parts || {})[part] || ""), "var(--sun-2)")}
+      <div class="stack">${tasks.map((t, k) => `<div class="card stack"><span class="wlabel">Teil ${t.teil || k + 1}${t.words ? " · unas " + t.words + " palabras" : ""}</span><p class="exde">${esc(t.task)}</p>
+        ${(t.p || t.hints || []).length ? `<ul style="margin:0 0 0 18px">${(t.p || t.hints).map(x => `<li class="exde" style="font-size:16px">${esc(x)}</li>`).join("")}</ul>` : ""}
+        <textarea id="ta${k}" rows="${part === "schreiben" ? 8 : 4}" style="font:500 17px/1.5 var(--f-de)" placeholder="${part === "schreiben" ? "Schreib hier …" : "Di tu respuesta (o escríbela) …"}"></textarea>
+        <div class="row">${part === "sprechen" ? `<button class="mic" type="button" data-mic data-act="mic" data-k="${k}">${ICON.mic}<span>Hablar</span></button>` : `<span class="small muted" id="wc${k}">0 palabras</span>`}<span class="spacer"></span><button class="btn sm" data-act="model" data-k="${k}">Ver modelo</button><button class="btn sm primary" data-ai data-act="ai" data-k="${k}">Corregir con IA</button></div>
+        <div id="o${k}" class="stack" style="gap:8px"></div>
+        <div class="row"><span class="small muted">Tu nota:</span>${[[0, "Todavía no"], [.5, "Regular"], [.8, "Bien"], [1, "Muy bien"]].map(([v, l]) => `<button class="chip" data-act="self" data-k="${k}" data-v="${v}">${l}</button>`).join("")}</div></div>`).join("")}</div>
+      <div id="tot" style="margin-top:12px"></div>`, {
+      model: el => { const k = +el.dataset.k; $("#o" + k).innerHTML = `<div class="trap"><span class="wlabel">Modelo</span><div class="row" style="flex-wrap:nowrap;align-items:flex-start;margin-top:6px">${part === "sprechen" ? sayBtn(tasks[k].model, "de-m") : ""}<p class="exde" style="white-space:pre-wrap">${esc(tasks[k].model)}</p></div></div>`; },
+      self: el => { const k = +el.dataset.k; scores[k] = +el.dataset.v; $$(`[data-act="self"][data-k="${k}"]`).forEach(b => b.setAttribute("aria-pressed", b === el)); addXP(5, el); fin(); },
+      mic: el => { const ta = $("#ta" + el.dataset.k), base = ta.value ? ta.value.trim() + " " : ""; if (stopFn) { stopFn(); return; } el.classList.add("on"); stopFn = listen("de", txt => { ta.value = base + txt; }, () => { el.classList.remove("on"); stopFn = null; }); if (!stopFn) el.classList.remove("on"); },
+      ai: async el => {
+        const k = +el.dataset.k, t = tasks[k], txt = $("#ta" + k).value.trim(); if (txt.split(/\s+/).length < 6) return toast("Escribe o di primero tu respuesta.");
+        el.disabled = true; $("#o" + k).innerHTML = '<p class="muted small">Corrigiendo como un examinador…</p>';
+        try {
+          const r = await askJSON(`Eres examinador del ${ex.name} (${part === "schreiben" ? "Schreiben" : "Sprechen"}). Tarea: "${t.task}"${(t.p || t.hints || []).length ? " Puntos: " + (t.p || t.hints).join(" / ") : ""}${t.words ? ". Extensión pedida: unas " + t.words + " palabras" : ""}.
+Respuesta del candidato hispanohablante:
+"""${txt.slice(0, 2500)}"""
+Evalúa con los criterios oficiales del nivel ${lv} (cumplimiento de la tarea, coherencia, vocabulario, corrección gramatical${part === "sprechen" ? ", interacción" : ""}). Responde SOLO JSON: {"nota":0.0 a 1.0,"comentario":"2-3 frases en español","corregido":"versión corregida en alemán","errores":[{"mal":"…","bien":"…","porque":"en español"}]}`, "default");
+          const v = Math.max(0, Math.min(1, Number(r.nota) || 0)); scores[k] = v; addXP(15, el);
+          $("#o" + k).innerHTML = `<div class="fb ${v >= .6 ? "ok" : "mid"}">${Math.round(v * 100)} % · ${esc(r.comentario || "")}</div>${(r.errores || []).length ? `<div class="card stack" style="gap:6px">${r.errores.map(e => `<div><s style="color:var(--bad)">${esc(e.mal)}</s> → <b style="color:var(--ok)">${esc(e.bien)}</b><br><span class="small muted">${esc(e.porque)}</span></div>`).join("")}</div>` : ""}<div class="trap"><span class="wlabel">Versión corregida</span><p class="exde" style="margin-top:6px">${esc(r.corregido || "")}</p></div>`;
+          fin();
+        } catch (e) { $("#o" + k).innerHTML = `<p class="small" style="color:var(--bad)">${esc(aiMsg(e))}</p>`; }
+        el.disabled = false;
+      }
+    });
+    if (part === "schreiben") tasks.forEach((t, k) => { $("#ta" + k).oninput = e => { $("#wc" + k).textContent = e.target.value.trim().split(/\s+/).filter(Boolean).length + " de unas " + t.words + " palabras"; }; });
+  }
+
   function route(parts) {
-    const [a, b] = parts;
+    const [a, b, c] = parts, rest = parts.slice(1).join("-");
     if (a === "repaso") return repaso();
     if (a === "wortschatz") return wortschatz();
-    if (a === "grammatik") return grammatik(b);
-    if (a === "hoeren") return hoeren(b);
+    if (a === "grammatik") return grammatik(rest);
+    if (a === "hoeren") return hoeren(rest);
+    if (a === "lesen") return lesen(rest);
+    if (a === "training") return training();
     if (a === "aussprache") return aussprache();
-    if (a === "pruefung") return pruefung(b);
+    if (a === "pruefung") { if (b === "A1") return pruefung(); if (LVS.includes(b)) return gexam(b, c); return pruefung(b); }
     if (a === "umgangssprache") return umgang();
     if (a === "kultur") return kultur();
     if (a === "tutor") return tutor();

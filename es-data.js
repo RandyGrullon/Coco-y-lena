@@ -38,6 +38,7 @@ window.ES = {
     retos: { es: "Retos con un adulto", de: "Aufgaben mit einem Erwachsenen", en: "Challenges with an adult" },
     album: { es: "Álbum de pegatinas", de: "Sticker-Album", en: "Sticker album" },
     shop: { es: "Tienda de Coco", de: "Cocos Laden", en: "Coco's shop" },
+    smart: { es: "Desafío de Coco", de: "Cocos Quiz, passt sich dir an", en: "Coco's quiz, adapts to you" },
     chat: { es: "Charla con Coco", de: "Plaudere mit Coco", en: "Chat with Coco" },
     simon: { es: "Simón dice", de: "Simon sagt", en: "Simon says" },
     fast: { es: "¡Contrarreloj!", de: "Gegen die Uhr!", en: "Beat the clock!" },
@@ -49,6 +50,16 @@ window.ES = {
     notsaid: { es: "¡Simón no lo dijo!", de: "Simon hat es nicht gesagt!", en: "Simon didn't say it!" },
     simonhelp: { es: "Haz lo que dice solo si empieza con «Simón dice».", de: "Mach es nur, wenn der Satz mit „Simón dice“ anfängt.", en: "Only do it if it starts with “Simón dice”." }
   },
+
+  /* Niveles (archipiélagos). Cada isla lleva level; las del archivo base son A1. */
+  levels: [
+    { id: "A1", es: "Archipiélago Palmera", de: "Palmen-Inseln", en: "Palm Islands", pic: "🌴", trophy: "🥉" },
+    { id: "A2", es: "Archipiélago Coral", de: "Korallen-Inseln", en: "Coral Islands", pic: "🐠", trophy: "🥈" },
+    { id: "B1", es: "Archipiélago Volcán", de: "Vulkan-Inseln", en: "Volcano Islands", pic: "🌋", trophy: "🥇" },
+    { id: "B2", es: "Archipiélago Estrella", de: "Sternen-Inseln", en: "Star Islands", pic: "🌟", trophy: "🏆" }
+  ],
+  /* Gran Desafío al final de cada nivel (lo rellenan los archivos content/es-*.js). */
+  exams: {},
 
   units: [
     {

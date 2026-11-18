@@ -1,7 +1,7 @@
 /* Service worker de Ñ & Ü: la app funciona sin internet una vez abierta.
    - Página: primero la red (para recibir actualizaciones) y, sin conexión, la copia guardada.
    - Voces (audio/*.mp3) y tipografías: primero la copia guardada; se guardan la primera vez que se piden. */
-const V = "nyu-v1";
+const V = "nyu-v2";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
