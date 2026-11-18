@@ -8,3 +8,5 @@ audio-manifest.js
 .vercel/
 __pycache__/
 *.part
+
+.vercel
