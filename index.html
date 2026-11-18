@@ -1,0 +1,755 @@
+<title>Ñ &amp; Ü</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#13A8B5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Lexend:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: una casa con dos mundos. Isla Ñ (niño, iPad): mar, islas en un camino, Coco el loro y botones grandes.
+   Werkstatt Ü (adulto, celular): tarjetas amables, barra inferior al alcance del pulgar, colores der/die/das. */
+:root{
+  --bg:#F2F6FB; --surface:#FFFFFF; --surface-2:#EAF0F7; --ink:#1C2433; --ink-2:#5B6678; --line:#DCE4EE;
+  --sea:#13A8B5; --sea-deep:#0A7F8B; --sea-2:#D8F3F5; --sun:#FFB52E; --sun-deep:#D18A06; --sun-2:#FFF1D2;
+  --hib:#F04F7E; --hib-2:#FDE3EB; --leaf:#38B467; --leaf-2:#DFF5E7; --grape:#8A6BE0; --grape-2:#ECE6FB; --sky:#7CCBF2;
+  --der:#3B6FE0; --die:#E5484D; --das:#1F9D68; --pl:#8E5BE0; --coach:#FF8A3D; --coach-2:#FFE9DA;
+  --ok:#1F9D68; --bad:#E5484D; --focus:#3B6FE0;
+  --shadow:0 2px 4px rgba(28,36,51,.05),0 10px 28px rgba(28,36,51,.08);
+  --f-kid:"Baloo 2","Nunito",ui-rounded,system-ui,sans-serif; --f-body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-de:"Lexend","Nunito",system-ui,sans-serif;
+  --navh:0px; --toph:58px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F151D; --surface:#18212C; --surface-2:#202B38; --ink:#E9EEF5; --ink-2:#A2B0C1; --line:#2B3846;
+  --sea:#2BBFCB; --sea-deep:#178D98; --sea-2:#103539; --sun:#FFC34F; --sun-deep:#E0A126; --sun-2:#3A2E13; --hib:#FF6B95; --hib-2:#3E1B27; --leaf:#4FCB7E; --leaf-2:#15331F; --grape:#A68CF0; --grape-2:#2A2342; --sky:#4FA9D6;
+  --der:#77A0FF; --die:#FF6F73; --das:#46C98E; --pl:#B08DF5; --coach:#FFA062; --coach-2:#3D2618;
+  --ok:#46C98E; --bad:#FF6F73; --focus:#77A0FF; --shadow:0 2px 4px rgba(0,0,0,.25),0 10px 28px rgba(0,0,0,.3); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0F151D; --surface:#18212C; --surface-2:#202B38; --ink:#E9EEF5; --ink-2:#A2B0C1; --line:#2B3846;
+  --sea:#2BBFCB; --sea-deep:#178D98; --sea-2:#103539; --sun:#FFC34F; --sun-deep:#E0A126; --sun-2:#3A2E13; --hib:#FF6B95; --hib-2:#3E1B27; --leaf:#4FCB7E; --leaf-2:#15331F; --grape:#A68CF0; --grape-2:#2A2342; --sky:#4FA9D6;
+  --der:#77A0FF; --die:#FF6F73; --das:#46C98E; --pl:#B08DF5; --coach:#FFA062; --coach-2:#3D2618;
+  --ok:#46C98E; --bad:#FF6F73; --focus:#77A0FF; --shadow:0 2px 4px rgba(0,0,0,.25),0 10px 28px rgba(0,0,0,.3); color-scheme:dark }
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--topbg,var(--surface))}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{cursor:default;opacity:.5}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:8px}
+input,textarea,select{font:inherit;font-size:max(16px,1em);color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:11px 14px;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--focus);outline:none}
+.muted{color:var(--ink-2)} .small{font-size:14px} .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .stack{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)} .spacer{flex:1}
+.center{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* barra superior */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:25;background:var(--topbg,var(--surface));color:var(--topink,var(--ink));border-bottom:1px solid var(--topline,var(--line));transition:background .3s}
+.top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:4px;padding-block:8px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.brand{font:800 25px/1 var(--f-kid);text-decoration:none;display:flex;align-items:baseline;gap:3px;margin-right:6px;white-space:nowrap}
+.brand .n{color:var(--brand-n,var(--hib))} .brand .u{font-family:var(--f-de);font-weight:700;color:var(--brand-u,var(--der))} .brand .amp{opacity:.55;font-size:17px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;text-decoration:none;padding:8px 13px;border-radius:999px;font-weight:800;font-size:15px;display:flex;gap:6px;align-items:center;opacity:.8}
+.tab[aria-current="page"]{background:var(--tabon,var(--surface-2));opacity:1}
+.icon-btn{border:0;background:transparent;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;color:inherit}
+.icon-btn svg{width:23px;height:23px}
+.icon-btn.off{opacity:.45}
+body[data-world="isla"]{--topbg:linear-gradient(90deg,#13A8B5,#0E95B8);--topink:#fff;--topline:transparent;--tabon:rgba(255,255,255,.22);--brand-n:#FFE08A;--brand-u:#fff}
+body[data-world="isla"]::before{background:#13A8B5}
+@media (max-width:520px){.tab .tl{display:none}.tab{padding:8px 11px;font-size:19px}.brand{font-size:23px}}
+
+.wrap{max-width:1240px;margin:0 auto;padding-block:20px calc(70px + var(--navh) + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* piezas compartidas */
+.btn{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 16px;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-content:center;text-decoration:none;min-height:46px}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{min-height:38px;padding:6px 12px;font-size:14px;border-radius:12px}
+@media (hover:hover){.btn:hover{border-color:var(--ink-2)}.btn.primary:hover{filter:brightness(1.15)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.say{border:0;background:var(--surface-2);width:44px;height:44px;border-radius:50%;display:inline-grid;place-items:center;flex:none;color:var(--ink)}
+.say svg{width:20px;height:20px}
+.say.on{background:var(--sea);color:#fff;animation:bump .6s ease infinite alternate}
+@keyframes bump{to{transform:scale(1.08)}}
+.mic{border:0;background:var(--hib);color:#fff;border-radius:999px;padding:11px 18px;font-weight:800;display:inline-flex;gap:8px;align-items:center;min-height:46px}
+.mic.on{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--hib) 25%,transparent)}}
+.bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--leaf);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.chip{border:2px solid var(--line);background:var(--surface);padding:7px 13px;border-radius:999px;font-weight:800;font-size:14px;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(20px + var(--navh) + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+.float{position:fixed;z-index:65;pointer-events:none;font:800 22px/1 var(--f-kid);color:var(--sun-deep);text-shadow:0 2px 0 #fff;animation:floatup 1.1s ease-out forwards}
+@keyframes floatup{from{opacity:1;transform:translate(-50%,0) scale(.8)}20%{transform:translate(-50%,-14px) scale(1.15)}to{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;min-width:560px}
+.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+
+/* ventana de recompensa */
+.ovl{position:fixed;inset:0;z-index:55;background:rgba(10,18,28,.5);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.ovl-card{background:var(--surface);border-radius:28px;padding:26px 22px;width:min(460px,100%);max-height:100%;overflow:auto;text-align:center;display:grid;gap:12px;justify-items:center;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:popin .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popin{from{transform:scale(.7);opacity:0}}
+.ovl-card .big{font-size:76px;line-height:1}
+.ovl-card h2{font:800 28px/1.15 var(--f-kid)}
+.stars-pop{font-size:46px;letter-spacing:6px;display:flex;gap:6px;justify-content:center}
+.stars-pop span{display:inline-block;animation:starpop .5s cubic-bezier(.2,1.6,.4,1) both}
+.stars-pop span.off{filter:grayscale(1);opacity:.3}
+@keyframes starpop{from{transform:scale(0) rotate(-90deg)}}
+
+/* ajustes */
+dialog{border:0;border-radius:24px;background:var(--surface);color:var(--ink);padding:0;width:min(560px,calc(100% - 24px));max-height:calc(100% - 40px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(10,16,22,.5)}
+.dlg-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dlg-h h3{font:800 22px var(--f-kid)}
+.dlg-b{padding:18px;display:grid;gap:18px;overflow:auto}
+.field{display:grid;gap:6px}
+.field>label,.field>.lbl{font-weight:800;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.switch{display:flex;align-items:center;gap:12px;font-weight:700}
+.switch input{width:22px;height:22px;flex:none}
+
+/* Coco */
+.coco{position:relative;display:inline-block;width:var(--cs);height:var(--cs);flex:none}
+.coco svg{width:100%;height:100%;overflow:visible;transform-origin:50% 90%}
+.coco .acc{position:absolute;line-height:1;pointer-events:none}
+.coco .hat{font-size:calc(var(--cs)*.36);left:36%;top:-17%;transform:rotate(-8deg)}
+.coco .face{font-size:calc(var(--cs)*.2);left:50%;top:18%}
+.coco .hand{font-size:calc(var(--cs)*.28);left:0;top:56%}
+.float-anim{animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-2deg)}}
+.coco.talk svg{animation:talk .22s ease-in-out infinite alternate}
+@keyframes talk{to{transform:rotate(-5deg) scale(1.04)}}
+.coco.jump{animation:jump .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jump{40%{transform:translateY(-22px) scale(1.05)}}
+
+/* portada */
+.home-h{margin-bottom:18px}
+.home-h h1{font:800 clamp(28px,5vw,40px)/1.05 var(--f-kid)}
+.home-h p{color:var(--ink-2);max-width:62ch;margin-top:6px}
+.doors{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.door{position:relative;border-radius:28px;padding:24px;min-height:340px;text-decoration:none;display:flex;flex-direction:column;gap:10px;overflow:hidden;isolation:isolate;box-shadow:var(--shadow)}
+.door-es{background:linear-gradient(165deg,#25BCC8 0%,#0E95B8 70%);color:#fff}
+.door-es::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-40px;height:130px;z-index:-1;background:radial-gradient(70% 60px at 50% 100%,#FFE7A8 0 60%,transparent 61%)}
+.door-de{background:linear-gradient(165deg,#FFF4EA,#FFE2CC);color:#3A2412}
+.door h2{font-size:42px}
+.door-es h2{font-family:var(--f-kid);font-weight:800}
+.door-de h2{font-family:var(--f-de);font-weight:700;letter-spacing:-.01em}
+.door .tag{font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.door .sub{font-size:17px;max-width:32ch}
+.door .go{margin-top:auto;display:inline-flex;align-self:flex-start;gap:8px;align-items:center;padding:13px 20px;border-radius:16px;font-weight:800;font-size:18px}
+.door-es .go{background:#FFD166;color:#3A2A00;font-family:var(--f-kid);box-shadow:0 5px 0 #C99A2E}
+.door-de .go{background:var(--coach);color:#fff;font-family:var(--f-de);box-shadow:0 5px 0 #C9621F}
+.door .art{position:absolute;right:14px;top:14px;z-index:-1}
+.door .stats{display:flex;gap:18px;flex-wrap:wrap;font-weight:700;font-size:14px}
+.door .stats b{font-size:24px;display:block;line-height:1.1;font-family:var(--f-kid)}
+.lena{width:var(--s,64px);height:var(--s,64px);border-radius:50%;background:linear-gradient(160deg,#FFB27A,var(--coach));display:grid;place-items:center;font-size:calc(var(--s,64px)*.56);flex:none;box-shadow:0 4px 0 #C9621F}
+.method-strip{margin-top:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.mcard .i{font-size:26px}
+.mcard h3{font:800 17px/1.2 var(--f-kid);margin:4px 0}
+.mcard p{font-size:14px;color:var(--ink-2)}
+
+/* método */
+.method{max-width:840px}
+.method h1{font:800 clamp(30px,5vw,40px)/1.05 var(--f-kid);margin-bottom:8px}
+.method h2{font:700 22px/1.2 var(--f-de);margin:34px 0 12px}
+.method p,.method li{max-width:68ch}
+.method .lead{font-size:18px;color:var(--ink-2)}
+.prin{display:grid;gap:12px}
+.prin .card{display:grid;grid-template-columns:48px 1fr;gap:4px 14px;padding:16px}
+.prin .num{grid-row:span 2;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font:800 20px/1 var(--f-kid);background:var(--sea-2);color:var(--sea-deep)}
+.prin h3{font:800 18px/1.2 var(--f-kid)}
+.prin p{color:var(--ink-2);font-size:15px}
+.src li{margin-bottom:6px;font-size:14px}
+.src a{color:var(--der)}
+
+@media (max-width:860px){.doors{grid-template-columns:1fr}.method-strip{grid-template-columns:1fr 1fr}.door{min-height:290px}}
+@media (max-width:460px){.method-strip{grid-template-columns:1fr}.door h2{font-size:34px}.door{padding:20px}.door .art{transform:scale(.75);transform-origin:top right}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style id="css-isla"></style>
+<style id="css-werk"></style>
+
+<header class="top"><div class="top-in">
+  <a class="brand" href="#" aria-label="Inicio"><span class="n">Ñ</span><span class="amp">&amp;</span><span class="u">Ü</span></a>
+  <nav class="tabs" id="tabs">
+    <a class="tab" href="#isla" data-w="isla"><span aria-hidden="true">🏝️</span><span class="tl">Isla Ñ</span></a>
+    <a class="tab" href="#werkstatt" data-w="werkstatt"><span aria-hidden="true">🛠️</span><span class="tl">Werkstatt Ü</span></a>
+    <a class="tab" href="#metodo" data-w="metodo"><span aria-hidden="true">📚</span><span class="tl">Método</span></a>
+  </nav>
+  <button class="icon-btn" id="b-sfx" data-act="t-sfx" aria-label="Efectos de sonido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+  <button class="icon-btn" id="b-music" data-act="t-music" aria-label="Música"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button>
+  <button class="icon-btn" data-act="settings" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+</div></header>
+
+<main id="view" class="view"></main>
+<div id="ovl" class="ovl" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas id="confetti" hidden></canvas>
+
+<dialog id="dlg-settings">
+  <div class="dlg-h"><h3>Ajustes</h3><span class="spacer"></span><button class="icon-btn" data-act="close-settings" aria-label="Cerrar">✕</button></div>
+  <div class="dlg-b" id="settings-body"></div>
+</dialog>
+
+<script src="es-data.js"></script>
+<script src="de-data.js"></script>
+<script src="audio-manifest.js"></script>
+<script>
+/* ================= utilidades ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const one = a => a[(Math.random() * a.length) | 0];
+const DAY = 864e5;
+const fmtDay = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = () => fmtDay(new Date());
+const startOfDay = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function norm(s) { return String(s || "").toLowerCase().normalize("NFC").replace(/[¿¡!?.,;:«»"“”„()…–—\-]/g, " ").replace(/\s+/g, " ").trim(); }
+function deUml(s) { return s.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss"); }
+function deacc(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+function lev(a, b) {
+  if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
+  let p = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) { const c = [i]; for (let j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; }
+  return p[b.length];
+}
+function sim(a, b) { a = deacc(norm(a)); b = deacc(norm(b)); if (!a && !b) return 1; return 1 - lev(a, b) / Math.max(a.length, b.length, 1); }
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  back: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+const sayBtn = (t, tag, extra = "") => `<button class="say" data-act="say" data-t="${esc(t)}" data-tag="${esc(tag)}" aria-label="Escuchar" ${extra}>${ICON.play}</button>`;
+
+/* ================= capacidades del visor (todas opcionales) ================= */
+const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
+const CAP = { sample: null, dict: null, tts: null, aiOff: false, ttsOff: false };
+const aiOK = () => !!CAP.sample && !CAP.aiOff;
+function paintCaps(root = document) {
+  $$("[data-ai]", root).forEach(el => el.hidden = !aiOK());
+  $$("[data-noai]", root).forEach(el => el.hidden = aiOK());
+  $$("[data-mic]", root).forEach(el => el.hidden = !CAP.dict);
+  $$("[data-nomic]", root).forEach(el => el.hidden = !!CAP.dict);
+}
+use("sample").then(s => { CAP.sample = s; paintCaps(); });
+use("dictation").then(d => { CAP.dict = d; paintCaps(); });
+use("tts").then(t => { CAP.tts = t; });
+async function askJSON(prompt, tier = "quick") {
+  if (!aiOK()) throw { code: "unavailable" };
+  try { return await CAP.sample.json(prompt, { modelTier: tier, cache: false }); }
+  catch (e) { if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(e && e.code)) { CAP.aiOff = true; paintCaps(); } throw e; }
+}
+function aiMsg(e) {
+  const c = e && e.code;
+  return ({ rate_limited: "Demasiadas consultas seguidas. Espera un minuto y vuelve a intentarlo.", session_expired: "Tu sesión de Claude caducó: vuelve a entrar.", refused: "No pude responder a eso. Prueba con otra frase.", invalid_json: "La respuesta llegó incompleta. Pulsa otra vez.", upstream_error: "Falló la conexión. Pulsa otra vez.", not_granted: "La IA está desactivada para esta página." })[c] || "La IA no está disponible ahora mismo.";
+}
+
+/* ================= estado y guardado ================= */
+const KEY = "nyu-progreso-v1";
+const DEFAULT = () => ({
+  v: 2, updated: 0,
+  settings: { rate: 1, engine: "auto", help: "de", accent: "mix", kidName: "", sfx: true, music: true, narr: true },
+  es: { stars: 0, coins: 0, streak: { n: 0, last: "" }, days: {}, units: {}, srs: {}, stickers: [], retos: {}, owned: [], wear: {} },
+  de: { xp: 0, srs: {}, custom: [], gym: {}, dlg: {}, pron: {}, exam: {}, course: {}, plan: {}, streak: { n: 0, last: "" }, days: {}, tutorN: 0,
+        goal: { date: "", label: "" }, themes: ["chunk", "essen", "stadt", "familie", "zeit", "verben", "winter"], newPerDay: 10, level: "A1", newToday: { d: "", n: 0 } }
+});
+function merge(base, o) {
+  if (!o || typeof o !== "object" || Array.isArray(o)) return o === undefined ? base : o;
+  const out = { ...base };
+  for (const k of Object.keys(o)) out[k] = (base && typeof base[k] === "object" && base[k] && !Array.isArray(base[k])) ? merge(base[k], o[k]) : o[k];
+  return out;
+}
+function loadLocal() { try { const r = localStorage.getItem(KEY); if (r) return merge(DEFAULT(), JSON.parse(r)); } catch (e) {} return DEFAULT(); }
+let S = loadLocal();
+const DB = { ref: null, busy: false, again: false };
+let saveT = 0;
+function save() { S.updated = Date.now(); clearTimeout(saveT); saveT = setTimeout(persist, 1200); }
+async function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  if (!DB.ref) return;
+  if (DB.busy) { DB.again = true; return; }
+  DB.busy = true;
+  try { await DB.ref.set({ json: JSON.stringify(S), updated: S.updated }); } catch (e) {}
+  DB.busy = false;
+  if (DB.again) { DB.again = false; persist(); }
+}
+addEventListener("pagehide", () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} });
+(async () => {
+  const [db, user] = await Promise.all([use("db"), use("user")]);
+  if (!db || !user) return;
+  const id = await user.id(); if (!id) return;
+  const ref = db.collection("data/users/" + id).doc("progreso");
+  try {
+    const snap = await Promise.race([ref.get(), sleep(10000).then(() => null)]);
+    if (!snap) return;
+    let remoteUpd = 0;
+    if (snap.exists) {
+      const d = snap.data() || {}; remoteUpd = d.updated || 0;
+      if (remoteUpd > (S.updated || 0) && d.json) { S = merge(DEFAULT(), JSON.parse(d.json)); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} route(); toast("Progreso recuperado de tu cuenta"); }
+    }
+    DB.ref = ref;
+    if ((S.updated || 0) > remoteUpd) persist();
+  } catch (e) {}
+})();
+function logActivity(track, pts = 1) {
+  const T = S[track], t = today();
+  T.days[t] = (T.days[t] || 0) + pts;
+  if (T.streak.last !== t) { const y = fmtDay(new Date(Date.now() - DAY)); T.streak.n = T.streak.last === y ? T.streak.n + 1 : 1; T.streak.last = t; }
+  save();
+}
+function streakNow(track) { const st = S[track].streak; const y = fmtDay(new Date(Date.now() - DAY)); return (st.last === today() || st.last === y) ? st.n : 0; }
+
+/* ================= repetición espaciada ================= */
+const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35, 80];
+function srsGrade(c, g) {
+  const now = Date.now();
+  if (g === 0) { c.b = 1; c.l = (c.l || 0) + 1; c.d = now + 3 * 60e3; }
+  else {
+    c.b = Math.min(BOX_DAYS.length - 1, Math.max(1, (c.b || 0) + (g === 1 ? 0 : g === 2 ? 1 : 2)));
+    const days = BOX_DAYS[c.b] * (g === 1 ? .5 : 1);
+    c.d = days < 1 ? now + 10 * 60e3 : startOfDay(now) + Math.round(days) * DAY + 3 * 3600e3;
+  }
+  c.n = (c.n || 0) + 1; c.t = now; return c;
+}
+const isDue = c => c && c.d <= Date.now();
+
+/* ================= motor de audio: voces grabadas, efectos y música ================= */
+const AUD = {
+  M: window.AUDIO_MANIFEST || null, ctx: null, bufs: new Map(), pend: new Map(), cur: null, order: [],
+  key: (tag, t) => tag + "|" + String(t).replace(/…/g, "").replace(/\s+/g, " ").trim(),
+  clip(tag, t) { return this.M ? this.M.c[this.key(tag, t)] : null; },
+  ensure() {
+    if (this.ctx) return this.ctx;
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    this.ctx = new C();
+    const mk = v => { const g = this.ctx.createGain(); g.gain.value = v; g.connect(this.ctx.destination); return g; };
+    this.vGain = mk(1); this.fxGain = mk(.55); this.muGain = mk(0);
+    return this.ctx;
+  },
+  running() { return this.ctx && this.ctx.state === "running"; },
+  unlock() {
+    const c = this.ensure(); if (!c) return;
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    if (c.state !== "running") c.resume().catch(() => {});
+  },
+  load(fi) {
+    if (this.bufs.has(fi)) return Promise.resolve(this.bufs.get(fi));
+    if (this.pend.has(fi)) return this.pend.get(fi);
+    const c = this.ensure(); if (!c || !this.M) return Promise.resolve(null);
+    const p = fetch(this.M.f[fi]).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(ab => new Promise((res, rej) => c.decodeAudioData(ab, res, rej)))
+      .then(b => { this.bufs.set(fi, b); this.order.push(fi); while (this.order.length > 8) this.bufs.delete(this.order.shift()); this.pend.delete(fi); return b; })
+      .catch(() => { this.pend.delete(fi); return null; });
+    this.pend.set(fi, p); return p;
+  },
+  prefetch(group) { if (!this.M) return; const fi = this.M.f.indexOf("audio/" + group + ".mp3"); if (fi >= 0) this.load(fi); },
+  async play(tag, t, rate = 1) {
+    const c = this.clip(tag, t); if (!c || !this.ensure()) return false;
+    this.unlock();
+    const b = await this.load(c[0]); if (!b) return false;
+    if (this.ctx.state !== "running") await Promise.race([this.ctx.resume().catch(() => {}), sleep(300)]);
+    if (this.ctx.state !== "running") return true; /* el audio está bloqueado: no frenar el juego */
+    this.stop();
+    const s = this.ctx.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; s.connect(this.vGain);
+    this.cur = s; MUSIC.duck(true);
+    const done = new Promise(r => { s.onended = r; });
+    s.start(0, c[1], c[2] + .06);
+    await Promise.race([done, sleep((c[2] / rate) * 1000 + 1200)]);
+    if (this.cur === s) { this.cur = null; MUSIC.duck(false); }
+    return true;
+  },
+  stop() { const s = this.cur; this.cur = null; if (s) { try { s.stop(); } catch (e) {} } MUSIC.duck(false); }
+};
+addEventListener("pointerdown", () => AUD.unlock(), { passive: true });
+addEventListener("keydown", () => AUD.unlock());
+
+/* Voces del sistema como respaldo (textos nuevos, tarjetas propias, respuestas de la IA). */
+const FEM = /(katja|hedda|amala|louisa|seraphina|tanja|ingrid|leni|elke|gisela|klarissa|maja|vicki|marlene|anna|petra|helena|laura|sabina|elvira|dalia|ximena|paloma|elena|ramona|salome|catalina|camila|lucia|lucía|marta|monica|mónica|paulina|irene|vera|karina|belkys|paola|female|frau|mujer)/i;
+const MAS = /(stefan|conrad|killian|florian|christoph|jonas|jan\b|bernd|klaus|ralf|markus|yannick|pablo|raul|raúl|alvaro|álvaro|jorge|emilio|tomas|tomás|gonzalo|alonso|sebastian|lorenzo|manuel|victor|carlos|diego|male|mann|hombre)/i;
+const Voice = {
+  list: [],
+  init() { if (!("speechSynthesis" in window)) return; const load = () => { this.list = speechSynthesis.getVoices() || []; }; load(); speechSynthesis.addEventListener?.("voiceschanged", load); },
+  lang(v) { return String(v.lang || "").replace("_", "-").toLowerCase(); },
+  score(v) { let s = 0; const n = v.name || ""; if (/natural|neural|premium|enhanced/i.test(n)) s += 5; if (/online/i.test(n)) s += 2; if (/google/i.test(n)) s += 2; return s; },
+  byBase(base) { return this.list.filter(v => this.lang(v).startsWith(base)); },
+  choose(langs, g) {
+    let pool = [];
+    for (const l of langs) { pool = this.list.filter(v => this.lang(v) === l.toLowerCase()); if (pool.length) break; }
+    if (!pool.length) pool = this.byBase(langs[0].slice(0, 2));
+    if (!pool.length) return null;
+    pool = [...pool].sort((a, b) => this.score(b) - this.score(a));
+    if (g === "f") return pool.find(v => FEM.test(v.name)) || pool[0];
+    if (g === "m") return pool.find(v => MAS.test(v.name)) || pool[0];
+    return pool[0];
+  },
+  stop() { try { speechSynthesis.cancel(); } catch (e) {} if (CAP.tts) CAP.tts.stop().catch(() => {}); },
+  async say(text, langs, g) {
+    const v = this.choose(langs, g);
+    if (CAP.tts && !CAP.ttsOff && (S.settings.engine === "claude" || !v)) {
+      try { await CAP.tts.speak(text, { language: langs[0].slice(0, 2) }); } catch (e) { if (e && e.code === "not_granted") CAP.ttsOff = true; }
+      return;
+    }
+    if (!v) { toast("No hay voz instalada para este texto en este dispositivo."); return; }
+    return new Promise(res => {
+      const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = S.settings.rate || 1;
+      u.onend = u.onerror = () => res();
+      try { speechSynthesis.speak(u); } catch (e) { res(); }
+      setTimeout(res, 1500 + String(text).length * 90);
+    });
+  }
+};
+Voice.init();
+const TAG_LANG = { coco: ["es-DO", "es-US", "es-MX"], mia: ["es-MX", "es-US"], alex: ["es-ES"], valen: ["es-AR", "es-US"], "k-lat": ["es-MX", "es-US"], "k-es": ["es-ES"], "k-de": ["de-DE"], "k-en": ["en-US"] };
+const TAG_G = { coco: "m", mia: "f", alex: "m", valen: "f", "k-lat": "f", "k-es": "f", "de-f": "f", "de-m": "m", "de-f2": "f", "de-m2": "m", "de-f3": "f", "de-m3": "m" };
+function tagLangs(tag) {
+  if (TAG_LANG[tag]) return TAG_LANG[tag];
+  if (tag.startsWith("r-")) return (ES.regions[tag.slice(2)] || ES.regions.mx).langs;
+  if (tag.startsWith("de")) return ["de-DE", "de-AT", "de-CH"];
+  return ["es-MX", "es-ES"];
+}
+/* Dice un texto: primero con la voz grabada, si no existe, con una voz del sistema. */
+async function speak(tag, text, opts = {}) {
+  const btn = opts.btn; if (btn) btn.classList.add("on");
+  try {
+    stopSpeech();
+    const t = tag.replace("~s", "");
+    if (await AUD.play(tag, text, opts.rate || 1)) return;
+    if (tag !== t && await AUD.play(t, text, .9)) return;
+    await Voice.say(String(text).replace(/…/g, ""), tagLangs(t), TAG_G[t]);
+  } finally { if (btn) btn.classList.remove("on"); }
+}
+function stopSpeech() { AUD.stop(); Voice.stop(); }
+
+/* Efectos sintetizados: no hace falta ningún archivo. */
+const SFX = {
+  tone(f, t, d, type = "sine", v = .2, f2) {
+    const c = AUD.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(AUD.fxGain); o.start(t); o.stop(t + d + .05);
+  },
+  noise(t, d, v = .15, hp = 3000) {
+    const c = AUD.ctx, b = c.createBuffer(1, Math.ceil(c.sampleRate * d), c.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = b; f.type = "highpass"; f.frequency.value = hp; g.gain.value = v; s.connect(f); f.connect(g); g.connect(AUD.fxGain); s.start(t);
+  },
+  play(type) {
+    if (!S.settings.sfx || !AUD.ensure()) return; AUD.unlock();
+    const t = AUD.ctx.currentTime + .01, T = this.tone.bind(this);
+    if (type === "ok") { T(784, t, .14, "sine", .22); T(1175, t + .08, .22, "sine", .2); }
+    else if (type === "bad") { T(260, t, .22, "triangle", .2, 170); }
+    else if (type === "coin") { T(1319, t, .07, "square", .06); T(1976, t + .06, .22, "square", .06); }
+    else if (type === "tap") { T(660, t, .05, "sine", .08); }
+    else if (type === "flip") { this.noise(t, .12, .08, 2500); }
+    else if (type === "combo") { [523, 659, 784, 1047].forEach((f, i) => T(f, t + i * .06, .14, "triangle", .16)); }
+    else if (type === "level") { [[523, 0], [659, .1], [784, .2], [1047, .32], [784, .46], [1047, .56]].forEach(([f, d]) => T(f, t + d, .22, "triangle", .2)); }
+    else if (type === "chest") { for (let i = 0; i < 10; i++) T(1200 + Math.random() * 1600, t + i * .05, .16, "sine", .08); this.noise(t, .4, .05, 6000); }
+    else if (type === "pop") { T(420, t, .1, "sine", .18, 900); }
+    else if (type === "buy") { T(880, t, .08, "square", .06); T(1320, t + .07, .08, "square", .06); T(1760, t + .14, .24, "square", .06); }
+  }
+};
+
+/* Música de fondo generada en vivo (melodía original, se puede apagar). */
+const MUSIC = {
+  timer: 0, next: 0, step: 0, style: "", base: .055,
+  CH: { isla: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]], werk: [[62, 65, 69, 72], [55, 59, 62, 65], [60, 64, 67, 71], [57, 60, 64, 67]] },
+  hz: m => 440 * Math.pow(2, (m - 69) / 12),
+  start(style) {
+    if (!S.settings.music) return this.stop();
+    if (this.style === style && this.timer) return;
+    this.stop(); this.style = style; if (!AUD.ensure()) return;
+    if (!AUD.running()) { this.style = ""; return; }
+    this.next = AUD.ctx.currentTime + .1; this.step = 0;
+    AUD.muGain.gain.setTargetAtTime(this.base * (style === "werk" ? .7 : 1), AUD.ctx.currentTime, .5);
+    this.timer = setInterval(() => this.tick(), 90);
+  },
+  stop() { clearInterval(this.timer); this.timer = 0; this.style = ""; if (AUD.ctx) AUD.muGain.gain.setTargetAtTime(0, AUD.ctx.currentTime, .2); },
+  duck(on) { if (!AUD.ctx || !this.timer) return; AUD.muGain.gain.setTargetAtTime(on ? .012 : this.base * (this.style === "werk" ? .7 : 1), AUD.ctx.currentTime, .15); },
+  note(m, t, d, type, v) {
+    const c = AUD.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = this.hz(m);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(AUD.muGain); o.start(t); o.stop(t + d + .05);
+  },
+  tick() {
+    const c = AUD.ctx; if (!c) return;
+    const isla = this.style === "isla", spb = isla ? 60 / 104 / 2 : 60 / 76 / 2;
+    while (this.next < c.currentTime + .3) {
+      const st = this.step, bar = Math.floor(st / 8) % 4, beat = st % 8, ch = this.CH[isla ? "isla" : "werk"][bar], t = this.next;
+      if (isla) {
+        if (beat === 0 || beat === 4) this.note(ch[0] - 12, t, .5, "sine", .5);
+        const mel = [0, 2, 1, 2, 0, 1, 2, 1], up = [12, 12, 12, 24, 12, 12, 24, 12];
+        if (beat !== 3 && beat !== 7) this.note(ch[mel[beat]] + up[(st >> 3) % 8 === 3 ? beat : (beat + bar) % 8], t, .32, "triangle", .32);
+        if (beat % 2 === 1) this.note(ch[2] + 12, t, .12, "sine", .08);
+      } else {
+        if (beat === 0) ch.forEach(m => this.note(m - 12, t, 1.8, "sine", .18));
+        if (beat === 3 || beat === 6) this.note(ch[(beat + bar) % ch.length], t, .6, "sine", .12);
+      }
+      this.next += spb; this.step++;
+    }
+  }
+};
+
+/* ================= vistas, acciones, avisos ================= */
+let ACT = {};
+let SEQ = 0; /* sube cada vez que cambia la vista: corta las lecturas en cadena */
+const GACT = {
+  say: el => speak(el.dataset.tag || "k-lat", el.dataset.t, { btn: el }),
+  settings: () => openSettings(),
+  "close-settings": () => $("#dlg-settings").close(),
+  "t-sfx": () => { S.settings.sfx = !S.settings.sfx; save(); paintToggles(); if (S.settings.sfx) SFX.play("pop"); },
+  "t-music": () => { S.settings.music = !S.settings.music; save(); paintToggles(); if (S.settings.music) { AUD.unlock(); setTimeout(worldMusic, 120); } else MUSIC.stop(); }
+};
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act] || GACT[el.dataset.act];
+  if (fn) { e.preventDefault(); fn(el, e); }
+});
+function paintToggles() { $("#b-sfx").classList.toggle("off", !S.settings.sfx); $("#b-music").classList.toggle("off", !S.settings.music); }
+function view(html, actions = {}, cls = "") {
+  SEQ++; stopSpeech(); closeOverlay();
+  const v = $("#view"); v.className = "view " + cls; v.innerHTML = html; ACT = actions;
+  paintCaps(v); window.scrollTo(0, 0);
+}
+let toastT = 0;
+function toast(msg, ms = 2600) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+function floatText(text, el) {
+  const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, width: 0, top: innerHeight / 2 };
+  const f = document.createElement("span"); f.className = "float"; f.textContent = text;
+  f.style.left = (r.left + r.width / 2) + "px"; f.style.top = (r.top) + "px";
+  document.body.appendChild(f); setTimeout(() => f.remove(), 1200);
+}
+function overlay(html, actions = {}) {
+  const o = $("#ovl"); o.innerHTML = `<div class="ovl-card" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false;
+  Object.assign(ACT, actions);
+}
+function closeOverlay() { const o = $("#ovl"); if (o) { o.hidden = true; o.innerHTML = ""; } }
+function starsPop(n) { return `<div class="stars-pop">${[0, 1, 2].map(i => `<span class="${i < n ? "" : "off"}" style="animation-delay:${.15 + i * .18}s">⭐</span>`).join("")}</div>`; }
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("#confetti"); c.hidden = false; const x = c.getContext("2d");
+  const W = c.width = innerWidth, H = c.height = innerHeight;
+  const cols = ["#13A8B5", "#FFB52E", "#F04F7E", "#38B467", "#3B6FE0", "#8A6BE0"];
+  const P = Array.from({ length: 140 }, () => ({ x: W / 2 + (Math.random() - .5) * 160, y: H * .4, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 5, r: Math.random() * 7 + 5, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6 }));
+  let f = 0;
+  (function tick() {
+    x.clearRect(0, 0, W, H);
+    for (const p of P) { p.vy += .35; p.x += p.vx; p.y += p.vy; p.a += .2; x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); x.restore(); }
+    if (++f < 120) requestAnimationFrame(tick); else { x.clearRect(0, 0, W, H); c.hidden = true; }
+  })();
+}
+function vibrate(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+async function copyText(text, fallbackEl) {
+  try { await navigator.clipboard.writeText(text); toast("Copiado"); }
+  catch (e) { if (fallbackEl) { fallbackEl.focus(); fallbackEl.select(); } toast("Selecciona el texto y cópialo"); }
+}
+
+/* ================= dictado (hablar) ================= */
+function listen(lang, onText, onEnd) {
+  const d = CAP.dict; if (!d) return null;
+  stopSpeech();
+  let buf = "", ended = false, started = false; const offs = [];
+  const finish = reason => { if (ended) return; ended = true; offs.forEach(f => f()); onEnd(buf.trim(), reason); };
+  offs.push(d.onFinal(({ text }) => { buf += buf ? text : text.replace(/^\s+/, ""); onText(buf.trim(), true); }));
+  offs.push(d.onPartial(({ text }) => { onText((buf + " " + text).trim(), false); }));
+  offs.push(d.onState(({ state, reason }) => { if (state !== "idle") started = true; else if (started) finish(reason); }));
+  d.start({ language: lang }).catch(e => {
+    finish(e && e.code);
+    if (e && e.code === "not_granted") toast("El micrófono está desactivado para esta página.");
+    else if (e && e.code === "unavailable") toast("El dictado no está disponible en este idioma aquí.");
+  });
+  return () => d.stop().catch(() => {});
+}
+
+/* ================= ajustes ================= */
+function openSettings() {
+  const st = S.settings;
+  const nClips = AUD.M ? Object.keys(AUD.M.c).length : 0;
+  $("#settings-body").innerHTML = `
+    <div class="field"><span class="lbl">Sonido</span>
+      <label class="switch"><input type="checkbox" id="s-sfx" ${st.sfx ? "checked" : ""}> Efectos (aciertos, monedas, premios)</label>
+      <label class="switch"><input type="checkbox" id="s-mus" ${st.music ? "checked" : ""}> Música de fondo</label>
+      <label class="switch"><input type="checkbox" id="s-nar" ${st.narr ? "checked" : ""}> Instrucciones habladas para el niño</label>
+      <p class="small muted">${nClips ? nClips + " frases grabadas con voces de 9 países hispanos y de Alemania, Austria y Suiza." : "Voces grabadas no disponibles: se usan las del dispositivo."} En iPad, si no oyes nada, quita el modo silencio.</p></div>
+    <div class="field"><span class="lbl">Ayuda del niño en</span>
+      <div class="seg">${[["de", "Deutsch"], ["en", "English"]].map(([v, l]) => `<button class="chip" data-act="set-help" data-v="${v}" aria-pressed="${st.help === v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Acento de las palabras en Isla Ñ</span>
+      <div class="seg">${[["mix", "Latinoamérica"], ["es", "España"]].map(([v, l]) => `<button class="chip" data-act="set-accent" data-v="${v}" aria-pressed="${(st.accent === "es" ? "es" : "mix") === v}">${l}</button>`).join("")}</div>
+      <p class="small muted">Los personajes siempre hablan con el acento de su país.</p></div>
+    <div class="field"><label for="kidname">Nombre del niño (opcional)</label><input id="kidname" value="${esc(st.kidName)}" maxlength="24" placeholder="Para saludarlo en la isla"></div>
+    ${OFF.ok ? `<div class="field"><span class="lbl">Sin internet</span>
+      <p class="small muted">Guarda todas las voces en este dispositivo (unos 34 MB) para usar la app en el avión o sin datos.</p>
+      <div class="row"><button class="btn sm" data-act="offline">${OFF.done() ? "✓ Guardado · actualizar" : "Guardar para usar sin internet"}</button><span id="off-st" class="small muted"></span></div></div>` : ""}
+    <div class="field"><span class="lbl">Dónde se guarda el progreso</span>
+      <p class="small muted">${DB.ref ? "En tu cuenta de Claude y en este dispositivo." : "En este dispositivo. Para pasarlo a otro, copia el código y pégalo allí."}</p>
+      <textarea id="savecode" rows="3" readonly></textarea>
+      <div class="row"><button class="btn sm" data-act="copy-save">Copiar código</button></div>
+      <textarea id="loadcode" rows="2" placeholder="Pega aquí un código de progreso"></textarea>
+      <div class="row"><button class="btn sm" data-act="load-save">Cargar este código</button><span class="spacer"></span><button class="btn sm ghost" data-act="reset-ask" style="color:var(--bad)">Borrar todo…</button></div>
+      <div id="reset-confirm" hidden class="card" style="border-color:var(--bad)"><p>Se borran estrellas, monedas, tarjetas y avance de los dos cursos en este dispositivo. No se puede deshacer.</p><div class="row" style="margin-top:10px"><button class="btn sm" data-act="reset-no">Cancelar</button><button class="btn sm primary" style="background:var(--bad);border-color:var(--bad)" data-act="reset-yes">Sí, borrar</button></div></div>
+    </div>`;
+  try { $("#savecode").value = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); } catch (e) {}
+  $("#kidname").oninput = e => { S.settings.kidName = e.target.value.trim(); save(); };
+  $("#s-sfx").onchange = e => { S.settings.sfx = e.target.checked; save(); paintToggles(); };
+  $("#s-mus").onchange = e => { S.settings.music = e.target.checked; save(); paintToggles(); if (e.target.checked) worldMusic(); else MUSIC.stop(); };
+  $("#s-nar").onchange = e => { S.settings.narr = e.target.checked; save(); };
+  const set = (k, v) => { S.settings[k] = v; save(); openSettings(); };
+  Object.assign(GACT, {
+    offline: async el => {
+      if (!AUD.M) return;
+      el.disabled = true; const st = $("#off-st"), files = AUD.M.f; let n = 0, fail = 0;
+      for (const f of files) { try { const r = await fetch(f); if (!r.ok) fail++; } catch (e) { fail++; } n++; st.textContent = n + " / " + files.length; }
+      el.disabled = false;
+      if (fail) st.textContent = "Faltaron " + fail + " paquetes: vuelve a intentarlo con buena conexión.";
+      else { try { localStorage.setItem("nyu-offline", "1"); } catch (e) {} st.textContent = "✓ Listo: ya funciona sin internet"; SFX.play("level"); }
+    },
+    "set-help": el => { set("help", el.dataset.v); if (location.hash.startsWith("#isla")) route(); },
+    "set-accent": el => set("accent", el.dataset.v),
+    "copy-save": () => copyText($("#savecode").value, $("#savecode")),
+    "load-save": () => {
+      try { const o = JSON.parse(decodeURIComponent(escape(atob($("#loadcode").value.trim())))); if (!o || !o.es || !o.de) throw 0; S = merge(DEFAULT(), o); save(); persist(); toast("Progreso cargado"); $("#dlg-settings").close(); route(); }
+      catch (e) { toast("Ese código no es válido. Cópialo completo otra vez."); }
+    },
+    "reset-ask": () => { $("#reset-confirm").hidden = false; },
+    "reset-no": () => { $("#reset-confirm").hidden = true; },
+    "reset-yes": () => { S = DEFAULT(); save(); persist(); $("#dlg-settings").close(); route(); toast("Progreso borrado"); }
+  });
+  const d = $("#dlg-settings"); if (!d.open) d.showModal();
+}
+
+/* ================= Coco (SVG) ================= */
+const COCO_SVG = `<svg viewBox="0 0 120 120" aria-hidden="true"><path d="M58 100c-6 9-14 14-22 17l10-22z" style="fill:#3B6FE0"/><path d="M62 100c-2 10-8 16-14 19l6-21z" style="fill:#FFB52E"/><ellipse cx="62" cy="70" rx="25" ry="31" style="fill:#3BB56A"/><ellipse cx="66" cy="78" rx="13" ry="17" style="fill:#7DDB9C"/><circle cx="66" cy="38" r="21" style="fill:#3BB56A"/><path d="M84 32c13 2 16 15 7 22-2-6-5-10-9-12z" style="fill:#FFB52E"/><path d="M84 46c4 2 6 4 7 8-4-1-7-3-9-5z" style="fill:#C98200"/><circle cx="72" cy="33" r="7" style="fill:#fff"/><circle class="pupil" cx="74" cy="33.5" r="3.6" style="fill:#1C2433"/><circle cx="75.2" cy="32.2" r="1.2" style="fill:#fff"/><circle cx="62" cy="44" r="4" style="fill:#F04F7E;opacity:.45"/><path d="M47 60c-9 17-4 36 13 40-6-13-6-27-1-40z" style="fill:#F04F7E"/><path d="M52 21c1-10 9-15 15-7M60 18c3-8 11-10 14-3" style="stroke:#F04F7E;stroke-width:5;fill:none;stroke-linecap:round"/><path d="M56 100l-4 9M68 100l4 9" style="stroke:#FFB52E;stroke-width:4;stroke-linecap:round"/></svg>`;
+function cocoHTML(size = 120, extra = "") {
+  const w = (S.es && S.es.wear) || {}, item = id => (ES.shop.find(x => x.id === id) || {}).pic || "";
+  return `<span class="coco ${extra}" style="--cs:${size}px">${COCO_SVG}${w.hat ? `<span class="acc hat">${item(w.hat)}</span>` : ""}${w.face ? `<span class="acc face">${item(w.face)}</span>` : ""}${w.hand ? `<span class="acc hand">${item(w.hand)}</span>` : ""}</span>`;
+}
+
+/* ================= portada ================= */
+function renderHome() {
+  document.body.dataset.world = "home";
+  const es = S.es, de = S.de;
+  const unitsDone = ES.units.filter(u => (es.units[u.id] || {}).done).length;
+  const deCards = Object.values(de.srs), dueDe = deCards.filter(isDue).length;
+  view(`<div class="wrap">
+    <div class="home-h"><h1>Dos idiomas, un método</h1>
+      <p>Español para un niño de 9 años y alemán para quien está terminando el A1.4. Voces reales de cada país, juegos y un plan corto para cada día.</p></div>
+    <div class="doors">
+      <a class="door door-es" href="#isla">
+        <span class="art">${cocoHTML(150, "float-anim")}</span>
+        <span class="tag">Para niños · iPad</span>
+        <h2>Isla Ñ</h2>
+        <p class="sub">Cuentos con Coco el loro, juegos con monedas, «Simón dice» y palabras de España, México, el Caribe y Argentina.</p>
+        <div class="stats"><span><b>⭐ ${es.stars}</b>estrellas</span><span><b>🪙 ${es.coins}</b>monedas</span><span><b>🏝️ ${unitsDone}/${ES.units.length}</b>islas</span></div>
+        <span class="go">¡A jugar! →</span>
+      </a>
+      <a class="door door-de" href="#werkstatt">
+        <span class="art"><span class="lena" style="--s:110px">👩🏼‍🔧</span></span>
+        <span class="tag">Para adultos · celular</span>
+        <h2>Werkstatt Ü</h2>
+        <p class="sub">Tu taller de alemán con Lena: tarjetas der/die/das, gramática con trucos, diálogos, examen Goethe A1 y alemán de la calle.</p>
+        <div class="stats"><span><b>${dueDe}</b>por repasar</span><span><b>${(levelOf(de.xp || 0)).name}</b>nivel</span><span><b>🔥 ${streakNow("de")}</b>días</span></div>
+        <span class="go">Los geht's →</span>
+      </a>
+    </div>
+    <div class="method-strip">
+      <div class="mcard"><span class="i">👂</span><h3>Escuchar mucho</h3><p>Cuentos y diálogos que se entienden casi enteros, con voces de verdad.</p></div>
+      <div class="mcard"><span class="i">🧠</span><h3>Recordar sin mirar</h3><p>Primero intentas, luego ves la respuesta: así se fija.</p></div>
+      <div class="mcard"><span class="i">📅</span><h3>Repasar a tiempo</h3><p>Cada palabra vuelve justo antes de olvidarla: 1, 3, 7, 16 días…</p></div>
+      <div class="mcard"><span class="i">💬</span><h3>Hablar con alguien</h3><p>Retos en familia, tándem entre los dos y un tutor que corrige con cariño.</p></div>
+    </div>
+    <p style="margin-top:16px"><a href="#metodo" class="btn">Leer por qué funciona →</a></p>
+  </div>`);
+}
+function levelOf(xp) { const L = DE.levels; let i = 0; L.forEach((l, k) => { if (xp >= l[0]) i = k; }); return { i, name: L[i][1], min: L[i][0], next: L[i + 1] ? L[i + 1][0] : null }; }
+
+/* ================= el método (análisis) ================= */
+function renderMethod() {
+  document.body.dataset.world = "metodo";
+  view(`<div class="wrap"><article class="method">
+    <h1>Cómo se aprende de verdad un idioma</h1>
+    <p class="lead">Resumen de la investigación sobre adquisición de segundas lenguas y cómo lo aplica cada parte de esta página. Ninguna app sustituye a hablar con personas; lo que sí puede hacer es que cada minuto de práctica cuente.</p>
+    <h2>Lo que dice la evidencia</h2>
+    <div class="prin">
+      <div class="card"><span class="num">1</span><h3>Mucho input que se entienda casi entero</h3><p>Se adquiere una lengua entendiendo mensajes (Krashen). Para leer sin ayuda hace falta conocer alrededor del 95–98 % de las palabras de un texto (Hu y Nation; Nation 2006); escuchando basta algo menos, y no hay un umbral mágico: cuanto más se entiende, mejor. Por eso los cuentos y diálogos usan casi solo palabras ya vistas, con dibujos y traducción a un toque.</p></div>
+      <div class="card"><span class="num">2</span><h3>Repetición espaciada</h3><p>Un metaanálisis de 48 experimentos con 3.411 personas (Kim y Webb, 2022) encontró un efecto de medio a grande al espaciar la práctica de una L2. Las tarjetas vuelven a 1, 3, 7, 16, 35 y 80 días.</p></div>
+      <div class="card"><span class="num">3</span><h3>Recuperar, no releer</h3><p>Intentar recordar antes de ver la respuesta fija la memoria mucho más que repasar mirando; espaciar esos intentos tiene un efecto fuerte (g = 0,74 en 29 estudios, Latimier y colegas, 2021). Casi todo aquí es una pregunta: tocar el dibujo, escribir el artículo, decir la frase.</p></div>
+      <div class="card"><span class="num">4</span><h3>Gramática explícita para el adulto, juego para el niño</h3><p>En adultos la instrucción explícita da efectos mayores que la implícita (Norris y Ortega: d ≈ 1,13 frente a 0,54; Spada y Tomita, 2010). Un niño de 9 años aprende mejor con contextos concretos que con reglas abstractas.</p></div>
+      <div class="card"><span class="num">5</span><h3>Hablar y recibir corrección</h3><p>Producir obliga a notar lo que falta (Swain), y los metaanálisis sobre corrección (Lyster y Saito, 2010; Li, 2010) muestran que el feedback ayuda. Aquí se habla con el micrófono, se escribe con corrección y se conversa con un tutor.</p></div>
+      <div class="card"><span class="num">6</span><h3>Pronunciación: muchas voces distintas</h3><p>Un metaanálisis de 79 estudios (2025) respalda el entrenamiento de alta variabilidad: oír pares como «Kirche / Kirsche» en voces diferentes. Por eso el laboratorio de pronunciación usa 6 voces de Alemania, Austria y Suiza.</p></div>
+      <div class="card"><span class="num">7</span><h3>Las cuatro ramas</h3><p>Paul Nation propone repartir el tiempo entre input, output, estudio de la lengua y fluidez. El plan diario de Werkstatt Ü y la misión diaria de Isla Ñ siguen ese reparto.</p></div>
+      <div class="card"><span class="num">8</span><h3>Horas y ganas</h3><p>En clase, los que empiezan entre los 8 y los 11 años avanzan rápido y las horas de exposición pesan más que la edad (proyecto BAF de Carmen Muñoz). Para un niño, disfrutar es condición para aprender: por eso hay monedas, tienda y premios.</p></div>
+    </div>
+    <h2>Dónde se queda corto Duolingo</h2>
+    <p>Las revisiones lo ven útil para vocabulario básico y comprensión de principiante, pero dudoso para conversar: poca producción libre, poca entonación natural y poco feedback personal. Buena parte de la evidencia favorable viene de la propia empresa, y una revisión independiente señaló sesgos en esos informes. Su gran acierto es crear hábito, y eso sí lo copiamos, premiando lo que enseña.</p>
+    <h2>Qué hace cada parte</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Principio</th><th>Isla Ñ (niño)</th><th>Werkstatt Ü (adulto)</th></tr></thead>
+      <tbody>
+        <tr><td>Input comprensible</td><td>Un cuento por isla, cada personaje con la voz de su país</td><td>9 diálogos reales a dos velocidades, con voces distintas</td></tr>
+        <tr><td>Recuperación + espaciado</td><td>Cofre de repaso con las palabras ya jugadas</td><td>Tarjetas der/die/das: primero reconocer, luego escribir</td></tr>
+        <tr><td>Estudio de la lengua</td><td>Notas cortas dentro del cuento</td><td>13 temas del A1 al A2 con la trampa del hispanohablante</td></tr>
+        <tr><td>Output + feedback</td><td>«¡Habla!», Simón dice, retos con un adulto</td><td>Dictado, examen oral simulado, escritura corregida, tutor</td></tr>
+        <tr><td>Fluidez</td><td>Contrarreloj de 45 segundos</td><td>Shadowing de los diálogos</td></tr>
+        <tr><td>Lengua real</td><td>Expresiones de 9 países hispanos</td><td>Coloquial por regiones, cultura y calendario de invierno</td></tr>
+        <tr><td>Motivación</td><td>Estrellas, monedas, tienda de Coco, álbum</td><td>XP y niveles del taller (Lehrling → Meister), racha, insignias</td></tr>
+      </tbody></table></div>
+    <h2>Cómo usarlo</h2>
+    <p><b>El niño:</b> 10–15 minutos, 5 o 6 días a la semana, mejor con un adulto al lado las primeras veces. Sin corregirle cada error: repetir la frase bien, con naturalidad, y celebrar que lo intenta.</p>
+    <p style="margin-top:10px"><b>El adulto:</b> 20 minutos al día además de la clase. Marca en «Mi curso» lo que ya viste y mete las palabras nuevas en tus tarjetas el mismo día.</p>
+    <p style="margin-top:10px"><b>Los dos juntos:</b> si uno habla alemán y el otro español, son el tándem perfecto: diez minutos en cada idioma.</p>
+    <h2>Fuentes consultadas</h2>
+    <ul class="src">
+      <li>Kim y Webb (2022). <a href="https://eld.bl.uk/catalog/100152978253_0x000001" target="_blank" rel="noopener">The Effects of Spaced Practice on Second Language Learning: A Meta-Analysis</a>.</li>
+      <li>Norris y Ortega, <a href="https://www.deepdyve.com/lp/wiley/does-type-of-instruction-make-a-difference-substantive-findings-from-a-9dzVAhpcHv/" target="_blank" rel="noopener">Does Type of Instruction Make a Difference?</a> · Spada y Tomita (2010), <a href="https://www.bohrium.com/paper-details/interactions-between-type-of-instruction-and-type-of-language-feature-a-meta-analysis/811806560392052736-6763" target="_blank" rel="noopener">Interactions Between Type of Instruction and Type of Language Feature</a>.</li>
+      <li>Nation (2006), <a href="https://www.wgtn.ac.nz/__data/assets/pdf_file/0018/1626120/2006-How-large-a-vocab.pdf" target="_blank" rel="noopener">How Large a Vocabulary Is Needed for Reading and Listening?</a> · <a href="https://nflrc.hawaii.edu/rfl/item-detail/654" target="_blank" rel="noopener">Lexical coverage and reading comprehension revisited</a>.</li>
+      <li><a href="https://resolve.cambridge.org/core/services/aop-cambridge-core/content/view/6ABB8C1F32D88D53EA8D05A4565E76F6/S0272263125100879a.pdf/high-variability-phonetic-training-hvpt-a-meta-analysis-of-l2-perceptual-training-studies.pdf" target="_blank" rel="noopener">High Variability Phonetic Training: a meta-analysis</a> (SSLA, 2025) · <a href="https://ora.ox.ac.uk/objects/uuid:3104cae1-3a6b-400a-b173-de44384238d2" target="_blank" rel="noopener">Revisión sistemática sobre shadowing</a> (Oxford, 2024).</li>
+      <li>Muñoz y el proyecto BAF: <a href="https://www.enl.auth.gr/gala/14th/Papers/Invited%20Speakers/Munoz.pdf" target="_blank" rel="noopener">ponencia en GALA</a> · <a href="https://www.actfl.org/research/research-briefs/the-impact-of-early-language-learning" target="_blank" rel="noopener">resumen de ACTFL</a>.</li>
+      <li>Sobre Duolingo: <a href="https://callej.org/index.php/journal/article/download/419/347/1013" target="_blank" rel="noopener">revisión de los informes de la empresa (CALL-EJ, 2022)</a> · <a href="https://jurnal.usk.ac.id/SiELE/article/download/40517/22995" target="_blank" rel="noopener">revisión en SiELE</a>.</li>
+      <li>Goethe-Institut: <a href="https://goethe.de/pro/relaunch/prf/et/Pruefungsziele_Testbeschreibung_A1_SD1.pdf" target="_blank" rel="noopener">Start Deutsch 1, objetivos y descripción</a> · <a href="https://www.goethe.de/pro/relaunch/prf/materialien/A1_sd1/sd_1_uebungssatz01.pdf" target="_blank" rel="noopener">modelo de examen</a>.</li>
+    </ul>
+  </article></div>`);
+}
+
+/* ================= router ================= */
+function worldMusic() { if (document.body.dataset.world === "isla") MUSIC.start("isla"); else MUSIC.stop(); }
+function route() {
+  const h = location.hash.slice(1), parts = h.split("-"), w = parts[0] || "";
+  $$("#tabs .tab").forEach(a => a.setAttribute("aria-current", a.dataset.w === w ? "page" : "false"));
+  document.documentElement.style.setProperty("--navh", "0px");
+  if ((w === "isla" || w === "werkstatt") && S.settings.lastWorld !== w) { S.settings.lastWorld = w; save(); }
+  if (w === "isla" && window.Isla) { document.body.dataset.world = "isla"; Isla.route(parts.slice(1)); }
+  else if (w === "werkstatt" && window.Werk) { document.body.dataset.world = "werk"; Werk.route(parts.slice(1)); }
+  else if (w === "metodo") renderMethod();
+  else renderHome();
+  if (S.settings.music && AUD.running()) worldMusic(); else if (!S.settings.music) MUSIC.stop();
+}
+addEventListener("hashchange", route);
+addEventListener("pointerdown", () => { if (S.settings.music && !MUSIC.timer) setTimeout(worldMusic, 60); }, { passive: true });
+paintToggles();
+
+/* App instalable (fuera de Claude): funciona sin internet con un service worker. */
+const OFF = { ok: false, done: () => { try { return localStorage.getItem("nyu-offline") === "1"; } catch (e) { return false; } } };
+if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").then(() => { OFF.ok = true; }).catch(() => {});
+}
+</script>
+<script src="isla.js"></script>
+<script src="werkstatt.js"></script>
+<script>
+/* Al abrir sin dirección concreta, vuelve al mundo que se usó la última vez (el iPad abre la isla; el celular, el taller). */
+if (!location.hash && S.settings.lastWorld) { try { history.replaceState(null, "", "#" + S.settings.lastWorld); } catch (e) {} }
+route();
+</script>

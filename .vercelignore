@@ -1,0 +1,5 @@
+audio-cache/
+dist/
+_preview.html
+audio-manifest.js
+__pycache__/

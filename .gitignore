@@ -1,0 +1,10 @@
+# caché de las voces generadas (se rehace con build_audio.py)
+audio-cache/
+# compilaciones locales
+dist/
+_preview.html
+audio-manifest.js
+# herramientas
+.vercel/
+__pycache__/
+*.part
