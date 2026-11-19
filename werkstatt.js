@@ -238,7 +238,7 @@ window.Werk = (() => {
   }
 
   /* ---------- navegación ---------- */
-  const NAV = [["", "🏠", "Hoy"], ["wortschatz", "🃏", "Wörter"], ["grammatik", "🧩", "Grammatik"], ["hoeren", "🎧", "Hören"], ["lesen", "📰", "Lesen"], ["training", "🧠", "Training"], ["aussprache", "👂", "Aussprache"], ["pruefung", "🎓", "Prüfung"], ["umgangssprache", "🗣️", "Umgangssprache"], ["kultur", "🎄", "Kultur"], ["tutor", "💬", "Tutor IA"], ["kurs", "✅", "Mi curso"]];
+  const NAV = [["", "🏠", "Hoy"], ["wortschatz", "🃏", "Wörter"], ["grammatik", "🧩", "Grammatik"], ["hoeren", "🎧", "Hören"], ["lesen", "📰", "Lesen"], ["training", "🧠", "Training"], ["sprechen", "🎤", "Sprechen"], ["aussprache", "👂", "Aussprache"], ["pruefung", "🎓", "Prüfung"], ["umgangssprache", "🗣️", "Umgangssprache"], ["kultur", "🎄", "Kultur"], ["tutor", "💬", "Tutor IA"], ["kurs", "✅", "Mi curso"]];
   const href = k => "#werkstatt" + (k ? "-" + k : "");
   function navs(cur) {
     const main = ["", "wortschatz", "grammatik", "hoeren"], inMore = !main.includes(cur);
@@ -301,6 +301,7 @@ window.Werk = (() => {
     const dateDe = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
     const pc = (k, h, ic, title, sub, min) => `<a class="pcard ${p[k] ? "ok" : ""}" href="${h}"><span class="min">${p[k] ? "✓ hecho" : min}</span><span class="ic">${ic}</span><b>${title}</b><span class="muted">${sub}</span></a>`;
     page("", `
+      ${Voz.streakWarn("de") ? `<div style="margin-bottom:14px">${Voz.streakWarn("de")}</div>` : ""}
       <div class="hgrid">
         <div class="stack">
           <div class="coach"><span class="lena" style="--s:60px">👩🏼‍🔧</span><div class="bub2"><span class="wlabel">Lena · ${esc(dateDe)}</span><span class="de">${esc(hde)}</span><span class="es">${esc(hes)}</span></div>${sayBtn(hde, "de-f")}</div>
@@ -308,8 +309,9 @@ window.Werk = (() => {
             ${pc("srs", "#werkstatt-repaso", "🃏", "Tarjetas", `${due} por repasar · ${nl} nuevas`, "5 min")}
             ${pc("gram", "#werkstatt-grammatik-" + g.id, "🧩", esc(g.title), seenTopics().has(g.id) ? "Lo viste en clase" : "Regla + ejercicios", "5 min")}
             ${pc("hoer", "#werkstatt-hoeren-" + d.id, "🎧", esc(d.title), "Escucha, repite y responde", "5 min")}
-            ${pc("out", aiOK() ? "#werkstatt-tutor" : "#werkstatt-pruefung-sprechen", "💬", aiOK() ? "Conversar con el tutor" : "Hablar: examen oral", aiOK() ? "Te corrige sin cortar la charla" : "Preséntate, pregunta, pide", "5 min")}
+            ${aiOK() ? pc("out", "#werkstatt-tutor", "💬", "Conversar con el tutor", "Te corrige sin cortar la charla", "5 min") : MIC.ready() ? pc("out", "#werkstatt-sprechen", "🎤", "Sprechstudio", "Habla: la app te corrige", "5 min") : pc("out", "#werkstatt-pruefung-sprechen", "💬", "Hablar: examen oral", "Preséntate, pregunta, pide", "5 min")}
           </div>
+          ${Voz.daily("de")}
           <div class="card stack" style="gap:8px"><span class="wlabel">Frase del día</span>
             <div class="row" style="flex-wrap:nowrap">${sayBtn(chunk.w, wTag(chunk))}<div><div class="exde">${esc(chunk.w)}</div><div class="muted small">${esc(chunk.es)}</div></div></div></div>
         </div>
@@ -320,7 +322,7 @@ window.Werk = (() => {
             ${gd != null ? `<span class="small">⏳ ${gd > 0 ? gd + " días para" : gd === 0 ? "Hoy:" : "Pasó:"} <b>${esc(goal.label || "tu meta")}</b></span>` : ""}
             <div class="lvlrow" style="margin-top:4px"><span class="wlabel">Nivel de idioma</span><span class="spacer"></span><b class="wf">${myLv()}</b><span class="muted small">· estimado ${est.lv} ${est.band}</span></div>
             ${up ? `<div class="fb mid">Tus respuestas ya son de ${est.lv}. <button class="btn sm" data-act="lvup" data-l="${est.lv}" style="margin-left:6px">Pasar a ${est.lv}</button></div>` : ""}
-            <a class="btn" href="#werkstatt-training" style="margin-top:6px">🧠 Entrenamiento inteligente</a></div>
+            <div class="two" style="margin-top:6px;gap:8px"><a class="btn" href="#werkstatt-training">🧠 Entrenamiento</a><a class="btn" href="#werkstatt-sprechen">🎤 Sprechstudio</a></div></div>
           <div class="card"><span class="wlabel">Esta semana</span>
             <div class="week" style="margin-top:10px">${week.map(w => `<div class="d ${w.k === today() ? "today" : ""}"><span class="b ${w.v ? "on" : ""}" style="height:${Math.max(6, w.v / maxW * 70)}px"></span>${w.l}</div>`).join("")}</div></div>
           <div class="card"><span class="wlabel">Abzeichen · insignias</span>
@@ -1103,6 +1105,33 @@ Evalúa con los criterios oficiales del nivel ${lv} (cumplimiento de la tarea, c
     if (part === "schreiben") tasks.forEach((t, k) => { $("#ta" + k).oninput = e => { $("#wc" + k).textContent = e.target.value.trim().split(/\s+/).filter(Boolean).length + " de unas " + t.words + " palabras"; }; });
   }
 
+  /* ---------- Sprechstudio: niveles que solo se superan hablando ---------- */
+  function sprechen() {
+    Voz.ladder({ lang: "de", hrefOf: (l, si) => `#werkstatt-sprechen-${l}-${si}`, page: (html, act) => page("sprechen", html, act) });
+  }
+  function sprechStage(lv, si) {
+    si = Math.max(0, Math.min(4, +si || 0));
+    if (!Voz.openLv("de").includes(lv)) return sprechen();
+    Voz.stage({
+      lang: "de", lv, si, backHref: "#werkstatt-sprechen",
+      page: (html, act) => page("sprechen", html, act),
+      onDone: (avg, pass, first) => {
+        const pct = Math.round(avg * 100);
+        if (pass) { planDone("out"); addXP(first ? 25 : 8); }
+        SFX.play(pass ? "level" : "bad"); if (pass && avg >= .85) confetti();
+        const nx = pass && si < 4 ? `#werkstatt-sprechen-${lv}-${si + 1}` : "#werkstatt-sprechen";
+        overlay(`<span class="lena" style="--s:86px">👩🏼‍🔧</span><h2 class="wf">${pass ? (si === 4 ? "Sprechstudio " + lv + " geschafft!" : "Gut gesprochen!") : "Fast!"}</h2>
+          <p style="font-size:34px;font-weight:800">${pct} %</p>
+          <p class="muted">${pass ? (si < 4 ? "Se abrió el siguiente peldaño." : "Terminaste los cinco peldaños de " + lv + ".") : "Hace falta un 65 % para abrir el siguiente peldaño. Escucha el modelo, imita la melodía y vuelve a intentarlo."}</p>
+          <div class="center"><button class="btn primary" data-act="ov-go">${pass ? (si < 4 ? "Siguiente peldaño" : "Volver al estudio") : "Otra vez"}</button><button class="btn" data-act="ov-x">Cerrar</button></div>`, {
+          "ov-go": () => { closeOverlay(); if (pass) location.hash = nx; else sprechStage(lv, si); },
+          "ov-x": () => { closeOverlay(); location.hash = "#werkstatt-sprechen"; }
+        });
+        if (pass) speak("de-f", one(D.coach.right));
+      }
+    });
+  }
+
   function route(parts) {
     const [a, b, c] = parts, rest = parts.slice(1).join("-");
     if (a === "repaso") return repaso();
@@ -1111,6 +1140,7 @@ Evalúa con los criterios oficiales del nivel ${lv} (cumplimiento de la tarea, c
     if (a === "hoeren") return hoeren(rest);
     if (a === "lesen") return lesen(rest);
     if (a === "training") return training();
+    if (a === "sprechen") return b ? sprechStage(b, c) : sprechen();
     if (a === "aussprache") return aussprache();
     if (a === "pruefung") { if (b === "A1") return pruefung(); if (LVS.includes(b)) return gexam(b, c); return pruefung(b); }
     if (a === "umgangssprache") return umgang();

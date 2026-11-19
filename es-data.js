@@ -38,6 +38,7 @@ window.ES = {
     retos: { es: "Retos con un adulto", de: "Aufgaben mit einem Erwachsenen", en: "Challenges with an adult" },
     album: { es: "Álbum de pegatinas", de: "Sticker-Album", en: "Sticker album" },
     shop: { es: "Tienda de Coco", de: "Cocos Laden", en: "Coco's shop" },
+    voz: { es: "Escalera de voz", de: "Sprich mit Coco, nur mit dem Mikrofon", en: "Talk to Coco, microphone only" },
     smart: { es: "Desafío de Coco", de: "Cocos Quiz, passt sich dir an", en: "Coco's quiz, adapts to you" },
     chat: { es: "Charla con Coco", de: "Plaudere mit Coco", en: "Chat with Coco" },
     simon: { es: "Simón dice", de: "Simon sagt", en: "Simon says" },

@@ -193,6 +193,7 @@ button:active:not(:disabled),.btn:active,.chip:active,a.pcard:active,a.tcard:act
 <style id="css-isla"></style>
 <style id="css-werk"></style>
 <style id="css-adapt"></style>
+<style id="css-voz"></style>
 
 <header class="top"><div class="top-in">
   <a class="brand" href="#" aria-label="Inicio"><span class="n">Ñ</span><span class="amp">&amp;</span><span class="u">Ü</span></a>
@@ -264,8 +265,9 @@ const aiOK = () => !!CAP.sample && !CAP.aiOff;
 function paintCaps(root = document) {
   $$("[data-ai]", root).forEach(el => el.hidden = !aiOK());
   $$("[data-noai]", root).forEach(el => el.hidden = aiOK());
-  $$("[data-mic]", root).forEach(el => el.hidden = !CAP.dict);
-  $$("[data-nomic]", root).forEach(el => el.hidden = !!CAP.dict);
+  const mic = !!CAP.dict || (!!window.MIC && MIC.canASR() && MIC.st.perm !== "denied");
+  $$("[data-mic]", root).forEach(el => el.hidden = !mic);
+  $$("[data-nomic]", root).forEach(el => el.hidden = mic);
 }
 use("sample").then(s => { CAP.sample = s; paintCaps(); });
 use("dictation").then(d => { CAP.dict = d; paintCaps(); });
@@ -583,7 +585,20 @@ async function copyText(text, fallbackEl) {
 
 /* ================= dictado (hablar) ================= */
 function listen(lang, onText, onEnd) {
-  const d = CAP.dict; if (!d) return null;
+  const d = CAP.dict;
+  if (!d) {
+    if (!window.MIC || !MIC.canASR()) return null;
+    return MIC.recognize(lang === "de" ? "de-DE" : S.settings.accent === "es" ? "es-ES" : "es-MX", {
+      long: lang === "de",
+      onText: t => onText(t, false),
+      onEnd: (t, err) => {
+        if (err === "not-allowed") toast("El micrófono está bloqueado. Mira Ajustes → Micrófono.", 4200);
+        else if (err === "network") toast("Para reconocer la voz hace falta internet.");
+        else if (err === "service-not-allowed") toast("Activa «Dictado» en los ajustes del dispositivo.", 4200);
+        onEnd(t, err === "not-allowed" ? "not_granted" : err);
+      }
+    });
+  }
   stopSpeech();
   let buf = "", ended = false, started = false; const offs = [];
   const finish = reason => { if (ended) return; ended = true; offs.forEach(f => f()); onEnd(buf.trim(), reason); };
@@ -608,6 +623,7 @@ function openSettings() {
       <label class="switch"><input type="checkbox" id="s-mus" ${st.music ? "checked" : ""}> Música de fondo</label>
       <label class="switch"><input type="checkbox" id="s-nar" ${st.narr ? "checked" : ""}> Instrucciones habladas para el niño</label>
       <p class="small muted">${nClips ? nClips + " frases grabadas con voces de 9 países hispanos y de Alemania, Austria y Suiza." : "Voces grabadas no disponibles: se usan las del dispositivo."} En iPad, si no oyes nada, quita el modo silencio.</p></div>
+    ${window.Voz ? Voz.settingsHtml() : ""}
     <div class="field"><span class="lbl">Ayuda del niño en</span>
       <div class="seg">${[["de", "Deutsch"], ["en", "English"]].map(([v, l]) => `<button class="chip" data-act="set-help" data-v="${v}" aria-pressed="${st.help === v}">${l}</button>`).join("")}</div></div>
     <div class="field"><span class="lbl">Acento de las palabras en Isla Ñ</span>
@@ -618,10 +634,12 @@ function openSettings() {
       <div class="row"><button class="btn sm" data-act="pl-es">Repetir la del niño</button><button class="btn sm" data-act="pl-de">Repetir la de alemán</button></div></div>
     <div class="field"><label for="kidname">Nombre del niño (opcional)</label><input id="kidname" value="${esc(st.kidName)}" maxlength="24" placeholder="Para saludarlo en la isla"></div>
     ${OFF.ok ? `<div class="field"><span class="lbl">Sin internet</span>
-      <p class="small muted">Guarda todas las voces en este dispositivo (unos 34 MB) para usar la app en el avión o sin datos.</p>
+      <p class="small muted">Guarda todas las voces en este dispositivo (unos 115 MB; mejor con wifi) para usar la app en el avión o sin datos.</p>
       <div class="row"><button class="btn sm" data-act="offline">${OFF.done() ? "✓ Guardado · actualizar" : "Guardar para usar sin internet"}</button><span id="off-st" class="small muted"></span></div></div>` : ""}
     <div class="field"><span class="lbl">Dónde se guarda el progreso</span>
       <p class="small muted">${DB.ref ? "En tu cuenta de Claude y en este dispositivo." : "En este dispositivo. Para pasarlo a otro, copia el código y pégalo allí."}</p>
+      ${!DB.ref && !isStandalone() && MIC.isIOS ? `<div class="warn"><span class="i">⚠️</span><div><p>Safari puede borrar los datos de las webs que no abres en 7 días. Añade la app a la pantalla de inicio (Compartir ⬆️ → «Añadir a pantalla de inicio») o copia el código de vez en cuando.</p></div></div>` : ""}
+      ${STORE_OK ? "" : `<div class="warn bad"><span class="i">🕶️</span><div><p>Estás en navegación privada: el progreso se pierde al cerrar la pestaña.</p></div></div>`}
       <textarea id="savecode" rows="3" readonly></textarea>
       <div class="row"><button class="btn sm" data-act="copy-save">Copiar código</button></div>
       <textarea id="loadcode" rows="2" placeholder="Pega aquí un código de progreso"></textarea>
@@ -645,6 +663,7 @@ function openSettings() {
       if (fail) st.textContent = "Faltaron " + fail + " paquetes: vuelve a intentarlo con buena conexión.";
       else { try { localStorage.setItem("nyu-offline", "1"); } catch (e) {} st.textContent = "✓ Listo: ya funciona sin internet"; SFX.play("level"); }
     },
+    "mic-test": el => Voz.test(el),
     "set-help": el => { set("help", el.dataset.v); if (location.hash.startsWith("#isla")) route(); },
     "set-accent": el => set("accent", el.dataset.v),
     "copy-save": () => copyText($("#savecode").value, $("#savecode")),
@@ -777,6 +796,19 @@ if ("serviceWorker" in navigator && !window.claude && (location.protocol === "ht
   navigator.serviceWorker.register("sw.js").then(() => { OFF.ok = true; }).catch(() => {});
 }
 
+/* Avisos: sin conexión, navegación privada, modo silencio del iPad/iPhone. */
+const STORE_OK = (() => { try { localStorage.setItem("nyu-t", "1"); localStorage.removeItem("nyu-t"); return true; } catch (e) { return false; } })();
+addEventListener("offline", () => toast(OFF.done() ? "📴 Sin conexión: las voces guardadas siguen funcionando." : "📴 Sin conexión: algunas voces y el micrófono pueden fallar.", 4200));
+addEventListener("online", () => toast("📶 Conexión recuperada"));
+if (!STORE_OK) setTimeout(() => toast("🕶️ Navegación privada: el progreso no se guardará al cerrar.", 5200), 1500);
+try { navigator.storage && navigator.storage.persist && navigator.storage.persisted().then(p => { if (!p) navigator.storage.persist().catch(() => {}); }).catch(() => {}); } catch (e) {}
+addEventListener("pointerdown", function silentHint() {
+  removeEventListener("pointerdown", silentHint);
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  try { if (!ios || window.claude || localStorage.getItem("nyu-silent-x")) return; localStorage.setItem("nyu-silent-x", "1"); } catch (e) { return; }
+  setTimeout(() => toast("🔈 ¿No oyes las voces? Quita el modo silencio y sube el volumen.", 5200), 1800);
+}, { passive: true });
+
 /* Sin zoom en ninguna parte: iOS ignora user-scalable=no, así que se bloquean los gestos de pellizco. */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
@@ -807,6 +839,7 @@ function showInstall() {
 setTimeout(showInstall, 2500);
 </script>
 <script src="adapt.js"></script>
+<script src="voz.js"></script>
 <script src="isla.js"></script>
 <script src="werkstatt.js"></script>
 <script>

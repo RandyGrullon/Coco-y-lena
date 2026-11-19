@@ -185,7 +185,7 @@ $("#css-isla").textContent = `
 .opts.six .opt.pic{font-size:clamp(40px,7vw,64px);min-height:clamp(84px,13vw,120px)}
 @media (max-width:1080px){
   .map-grid{grid-template-columns:minmax(0,1fr) minmax(260px,300px)}
-  .map-grid .side.left{grid-column:1/-1;position:static;grid-template-columns:auto 1fr;align-items:stretch}
+  .map-grid .side.left{grid-column:1/-1;position:static;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:stretch}
   .map-grid .side.left .coco-card{grid-template-columns:auto 1fr;justify-items:start;text-align:left;align-items:center}
 }
 @media (max-width:760px){
@@ -339,6 +339,7 @@ window.Isla = (() => {
     }).join("");
     view(`<div class="wrap isla">
       <div class="row" style="margin-bottom:14px;justify-content:space-between">${hud()}<span class="rank">${c.pic} ${esc(c.es)} · ${est.lv}</span></div>
+      ${Voz.streakWarn("es") ? `<div style="margin-bottom:14px">${Voz.streakWarn("es")}</div>` : ""}
       <div class="map-grid">
         <aside class="side left">
           <div class="coco-card">
@@ -355,10 +356,12 @@ window.Isla = (() => {
             <a class="m-item ${m.reto ? "ok" : ""}" href="#isla-retos"><span class="ck">${m.reto ? "✓" : "3"}</span><span>Un reto con un adulto<span class="kh">${esc(hp(ui("retos")))}</span></span></a>
             <button class="chest-btn ${allM && !m.chest ? "ready" : ""}" data-act="chest" ${allM && !m.chest ? "" : "disabled"}><span class="c">${m.chest ? "🎁" : "🧰"}</span>${m.chest ? "¡Cofre abierto!" : allM ? "¡Abre tu cofre!" : "Cofre del día"}</button>
           </div>
+          ${Voz.daily("es")}
         </aside>
         <div class="seas">${seas}</div>
         <aside class="side right">
           <div class="games">
+            ${tile("#isla-voz", "🎤", "voz", "c2")}
             ${tile("#isla-desafio", "🧠", "smart", "c5")}
             ${tile("#isla-repaso", "🧰", "review", "c1", dueN ? `<span class="badge">${dueN}</span>` : "")}
             ${tile("#isla-rapido", "⏱️", "fast", "c2")}
@@ -982,11 +985,39 @@ Devuelve SOLO JSON: {"coco":"tu frase en español","ayuda":"traducción al ${hel
     draw();
   }
 
+  /* ---------- escalera de voz: niveles que solo se superan hablando ---------- */
+  function vozHome() {
+    Voz.ladder({
+      lang: "es", hrefOf: (l, si) => `#isla-voz-${l}-${si}`,
+      page: (html, act) => view(`<div class="wrap isla"><div class="row" style="margin-bottom:14px;justify-content:space-between"><a class="gx" href="#isla" aria-label="Volver al mapa">${ICON.close}</a>${hud()}</div>${html}</div>`, { ...BASEACT, ...act })
+    });
+  }
+  function vozStage(lv, si) {
+    si = Math.max(0, Math.min(4, +si || 0));
+    if (!Voz.openLv("es").includes(lv)) return vozHome();
+    Voz.stage({
+      lang: "es", lv, si, backHref: "#isla-voz",
+      page: (html, act) => view(`<div class="wrap isla">${html}${coachK()}</div>`, { ...BASEACT, ...act }),
+      onDone: (avg, pass, first) => {
+        const stars = avg >= .85 ? 3 : avg >= .65 ? 2 : 1;
+        if (pass) addStars(stars);
+        reward({
+          stars, coins: pass ? (first ? 6 : 2) : 0, kind: pass ? "good" : "try",
+          title: pass ? (si === 4 ? "¡Subiste toda la escalera " + lv + "!" : "¡Peldaño superado!") : "¡Casi! " + Math.round(avg * 100) + " %",
+          help: pass ? (H() === "de" ? "Super gesprochen! Die nächste Stufe ist offen." : "Great speaking! The next step is open.") : (H() === "de" ? "Du brauchst zwei Sterne (65 %). Hör gut zu und versuch es noch einmal." : "You need two stars (65 %). Listen carefully and try again."),
+          nextLabel: pass && si < 4 ? "Siguiente peldaño" : pass ? "Escalera" : "Otra vez",
+          next: () => { location.hash = pass && si < 4 ? `#isla-voz-${lv}-${si + 1}` : pass ? "#isla-voz" : `#isla-voz-${lv}-${si}`; if (!pass) vozStage(lv, si); }
+        });
+      }
+    });
+  }
+
   function route(parts) {
     const [a, b] = parts;
     if (a === "u") return unit(parts.slice(1).join("-"));
     if (a === "examen") return exam(b);
     if (a === "desafio") return smart();
+    if (a === "voz") return b ? vozStage(b, parts[2]) : vozHome();
     if (a === "repaso") return review();
     if (a === "rapido") return fast();
     if (a === "simon") return simonScreen();
